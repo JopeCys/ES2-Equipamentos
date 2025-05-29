@@ -1,4 +1,4 @@
-package es2.microsservico.exemplo.controller;
+package scb.microsservico.base.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 

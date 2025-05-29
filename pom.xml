@@ -8,9 +8,9 @@
 		<version>3.5.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>es2</groupId>
+	<groupId>scb</groupId>
 	<artifactId>microsservico</artifactId>
-	<name>exemplo</name> <!-- COLOCAR O NOME DO SEU MICROSSERVICO AQUI-->
+	<name>base</name> <!-- COLOCAR O NOME DO SEU MICROSSERVICO AQUI-->
 	<description>Microsservico base para ES2</description>
 	<url/>
 	<licenses>
@@ -27,7 +27,7 @@
 	</scm>
 	
 	<properties>
-  		<sonar.organization>chibeg-unirio</sonar.organization>
+  		<sonar.organization>chibeg-unirio</sonar.organization> <!-- COLOCAR O NOME DA SUA ORG SONARCLOUD AQUI-->
 		<java.version>17</java.version>
 	</properties>
 	
@@ -78,7 +78,7 @@
 	</dependencies>
 
   <build>
-  	<finalName>nomeMicrosservico</finalName> <!-- COLOCAR O NOME DO SEU MICROSSERVICO AQUI-->
+  	<finalName>base</finalName> <!-- COLOCAR O NOME DO SEU MICROSSERVICO AQUI-->
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>

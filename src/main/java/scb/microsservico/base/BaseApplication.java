@@ -1,13 +1,13 @@
-package es2.microsservico.exemplo;
+package scb.microsservico.base;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ExemploApplication {
+public class BaseApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ExemploApplication.class, args);
+		SpringApplication.run(BaseApplication.class, args);
 	}
 
 }

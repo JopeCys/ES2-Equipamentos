@@ -1,7 +1,7 @@
 version: 0.0
 os: linux
 files:
-  - source: /target/nomeMicrosservico.jar
+  - source: /target/base.jar # TROCAR "base" PARA O NOME DO SEU MICROSSERVIÇO
     destination: /opt
 
 hooks:

@@ -1,10 +1,10 @@
-package es2.microsservico.exemplo;
+package scb.microsservico.base;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ExemploApplicationTests {
+class BaseApplicationTests {
 
 	// @Test
 	// void contextLoads() {
