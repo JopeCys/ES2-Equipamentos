@@ -27,7 +27,8 @@
 		<url/>
 	</scm>
 	<properties>
-  		<sonar.organization>chibeg-unirio</sonar.organization>
+		<properties>
+  			<sonar.organization>chibeg-unirio</sonar.organization>
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
