@@ -56,12 +56,20 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		
 		<dependency>
     		<groupId>org.mockito</groupId>
 			<artifactId>mockito-core</artifactId>
 			<version>5.18.0</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.49.1.0</version>
+		</dependency>
+		
 	</dependencies>
 
   <build>
