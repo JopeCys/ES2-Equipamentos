@@ -10,8 +10,7 @@
 	</parent>
 	<groupId>es2</groupId>
 	<artifactId>microsservico</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>exemplo</name>
+	<name>exemplo</name> <!-- COLOCAR O NOME DO SEU MICROSSERVICO AQUI-->
 	<description>Microsservico base para ES2</description>
 	<url/>
 	<licenses>
@@ -69,10 +68,11 @@
 			<artifactId>sqlite-jdbc</artifactId>
 			<version>3.49.1.0</version>
 		</dependency>
-		
+
 	</dependencies>
 
   <build>
+  	<finalName>nomeMicrosservico</finalName> <!-- COLOCAR O NOME DO SEU MICROSSERVICO AQUI-->
     <plugins>
       <plugin>
         <groupId>org.springframework.boot</groupId>
