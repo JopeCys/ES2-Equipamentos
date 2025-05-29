@@ -30,13 +30,13 @@ build:
   only:
     - main
 
-# aws-deploy:
-#   stage: deploy
-#   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
-#   script:
-#    - aws deploy push --application-name unirio-pm-projetos-base --s3-location s3://unirio-pm-projetos-base/projeto-base-spring-boot.zip --source .
-#    - aws deploy create-deployment --application-name unirio-pm-projetos-base --deployment-group-name projeto-base-spring-boot --s3-location bucket=unirio-pm-projetos-base,key=projeto-base-spring-boot.zip,bundleType=zip
-#   only:
-#     - main
-#   dependencies: 
-#     - build
+aws-deploy:
+  stage: deploy
+  image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
+  script:
+   - aws deploy push --application-name ES2-microsservico --s3-location s3://es2-microsservico-bucket/nomeMicrosservico.zip --source .
+   - aws deploy create-deployment --application-name ES2-microsservico --deployment-group-name ES2-microsservico-deploy --s3-location bucket=es2-microsservico-bucket,key=nomeMicrosservico.zip,bundleType=zip
+  only:
+    - main
+  dependencies: 
+    - build
