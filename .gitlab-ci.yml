@@ -35,7 +35,7 @@ aws-deploy:
   image: registry.gitlab.com/gitlab-org/cloud-deploy/aws-base:latest
   script:
    - aws deploy push --application-name ES2-microsservico --s3-location s3://es2-microsservico-bucket/base.zip --source . # TROCAR O NOME DO BUCKET E DO ZIP
-   - aws deploy create-deployment --application-name ES2-microsservico --deployment-group-name ES2-microsservico-deploy --s3-location bucket=es2-microsservico-bucket,key=nomeMicrosservico.zip,bundleType=zip
+   - aws deploy create-deployment --application-name ES2-microsservico --deployment-group-name ES2-microsservico-deploy --s3-location bucket=es2-microsservico-bucket,key=base.zip,bundleType=zip
     # TROCAR ACIMA O NOME DA APLICAÇÃO, NOME DO DEPLOYMENT GROUP, NOME DO BUCKET E NOME DO ZIP
   only:
     - main
