@@ -8,11 +8,11 @@
 		<version>3.5.0</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>es2.microsservico</groupId>
-	<artifactId>exemplo</artifactId>
+	<groupId>es2</groupId>
+	<artifactId>microsservico</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>exemplo</name>
-	<description>Demo project for Spring Boot</description>
+	<description>Microsservico base para ES2</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -27,6 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
+  		<sonar.organization>chibeg-unirio</sonar.organization>
 		<java.version>17</java.version>
 	</properties>
 	<dependencies>
