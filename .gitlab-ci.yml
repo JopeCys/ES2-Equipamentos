@@ -18,6 +18,7 @@ sonar-check:
     - mvn verify sonar:sonar -Dsonar.projectKey=chibeg_unirio_microsservico # TROCAR PROJECT KEY PARA A DO SEU PROJETO NO SONAR 
   only:
     - main
+    - develop
 
 build:
   stage: build
