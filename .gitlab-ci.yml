@@ -7,7 +7,7 @@ variables:
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   GIT_DEPTH: "0"
 
-sonarcloud-check:
+sonar-check:
   stage: check
   image: maven:3-openjdk-17
   cache:
@@ -17,7 +17,7 @@ sonarcloud-check:
   script:
     - mvn verify sonar:sonar -Dsonar.projectKey=chibeg_unirio_microsservico
   only:
-    - master
+    - main
 
 build:
   stage: build
