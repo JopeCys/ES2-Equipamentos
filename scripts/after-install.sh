@@ -1,2 +1,2 @@
 #!/bin/bash
-sudo chmod +x /opt/base.jar
+sudo chmod +x /opt/equipamentos.jar
