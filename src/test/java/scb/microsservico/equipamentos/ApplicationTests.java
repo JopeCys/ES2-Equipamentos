@@ -1,4 +1,4 @@
-package scb.microsservico.base;
+package scb.microsservico.equipamentos;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
