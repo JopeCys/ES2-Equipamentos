@@ -80,4 +80,21 @@ public class BicicletaRepositoryTest {
 
         assertThat(bicicletaRepository.findAll()).hasSize(2);
     }
+
+    @Test
+    @DisplayName("Deve verificar se existe uma bicicleta pelo numero")
+    void testExistsByNumero() {
+        Bicicleta bicicleta = new Bicicleta();
+        bicicleta.setMarca("Caloi");
+        bicicleta.setModelo("Elite");
+        bicicleta.setAno("2022");
+        bicicleta.setNumero(123456);
+        bicicletaRepository.save(bicicleta);
+
+        boolean exists = bicicletaRepository.existsByNumero(123456);
+        assertThat(exists).isTrue();
+
+        boolean notExists = bicicletaRepository.existsByNumero(654321);
+        assertThat(notExists).isFalse();
+    }
 }
