@@ -1,7 +1,7 @@
 package scb.microsservico.equipamentos.service;
 
+import java.security.SecureRandom;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -28,8 +28,9 @@ public class BicicletaService {
         bicicleta.setStatus(BicicletaStatus.NOVA);
 
         int numero;
+        SecureRandom secureRandom = new SecureRandom();
         do {
-            numero = ThreadLocalRandom.current().nextInt(1000000);
+            numero = secureRandom.nextInt(1000000);
         } while (bicicletaRepository.existsByNumero(numero)); 
         
         bicicleta.setNumero(numero);
