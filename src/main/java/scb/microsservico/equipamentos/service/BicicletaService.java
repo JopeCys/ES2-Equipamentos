@@ -1,7 +1,7 @@
 package scb.microsservico.equipamentos.service;
 
 import java.util.List;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -26,7 +26,13 @@ public class BicicletaService {
     public void criarBicicleta(BicicletaCreateDTO dto) {
         Bicicleta bicicleta = BicicletaMapper.toEntity(dto);
         bicicleta.setStatus(BicicletaStatus.NOVA);
-        bicicleta.setNumero(new Random().nextInt(1000000)); // Número aleatório de 0 a 999999
+
+        int numero;
+        do {
+            numero = ThreadLocalRandom.current().nextInt(1000000);
+        } while (bicicletaRepository.existsByNumero(numero)); 
+        
+        bicicleta.setNumero(numero);
         bicicletaRepository.save(bicicleta);
     }
 
