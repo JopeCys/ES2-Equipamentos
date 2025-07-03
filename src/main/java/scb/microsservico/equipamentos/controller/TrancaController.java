@@ -1,8 +1,8 @@
 package scb.microsservico.equipamentos.controller;
 
-import scb.microsservico.equipamentos.dto.TrancaResponseDTO;
-import scb.microsservico.equipamentos.dto.TrancaCreateDTO;
-import scb.microsservico.equipamentos.dto.TrancaUpdateDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaCreateDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaUpdateDTO;
 import scb.microsservico.equipamentos.service.TrancaService;
 
 import org.springframework.http.ResponseEntity;

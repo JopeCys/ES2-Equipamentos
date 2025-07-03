@@ -1,7 +1,9 @@
 package scb.microsservico.equipamentos.Tranca.exception;
 
 import org.junit.jupiter.api.Test;
-import scb.microsservico.equipamentos.exception.TrancaOcupadaException;
+
+import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class TrancaOcupadaExceptionTest {

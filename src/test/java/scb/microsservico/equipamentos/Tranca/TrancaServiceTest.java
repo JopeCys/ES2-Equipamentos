@@ -3,12 +3,13 @@ package scb.microsservico.equipamentos.Tranca;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import scb.microsservico.equipamentos.dto.TrancaCreateDTO;
-import scb.microsservico.equipamentos.dto.TrancaResponseDTO;
-import scb.microsservico.equipamentos.dto.TrancaUpdateDTO;
+
+import scb.microsservico.equipamentos.dto.Tranca.TrancaCreateDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaUpdateDTO;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
-import scb.microsservico.equipamentos.exception.TrancaNotFoundException;
-import scb.microsservico.equipamentos.exception.TrancaOcupadaException;
+import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
+import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
 import scb.microsservico.equipamentos.mapper.TrancaMapper;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.TrancaRepository;

@@ -1,7 +1,9 @@
 package scb.microsservico.equipamentos.Tranca.dto;
 
 import org.junit.jupiter.api.Test;
-import scb.microsservico.equipamentos.dto.TrancaUpdateDTO;
+
+import scb.microsservico.equipamentos.dto.Tranca.TrancaUpdateDTO;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 public class TrancaUpdateDTOTest {

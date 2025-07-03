@@ -1,7 +1,8 @@
 package scb.microsservico.equipamentos.Tranca.dto;
 
 import org.junit.jupiter.api.Test;
-import scb.microsservico.equipamentos.dto.TrancaResponseDTO;
+
+import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 import static org.junit.jupiter.api.Assertions.*;
 

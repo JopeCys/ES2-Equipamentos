@@ -1,7 +1,7 @@
 package scb.microsservico.equipamentos.mapper;
 
-import scb.microsservico.equipamentos.dto.TrancaCreateDTO;
-import scb.microsservico.equipamentos.dto.TrancaResponseDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaCreateDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.model.Tranca;
 

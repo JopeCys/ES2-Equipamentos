@@ -3,8 +3,9 @@ package scb.microsservico.equipamentos.Tranca.exception;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import scb.microsservico.equipamentos.exception.GlobalExceptionHandler;
-import scb.microsservico.equipamentos.exception.TrancaNotFoundException;
-import scb.microsservico.equipamentos.exception.TrancaOcupadaException;
+import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
+import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class GlobalExceptionHandlerTest {

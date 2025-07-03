@@ -7,6 +7,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
+import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
+import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
+
 @RestControllerAdvice // Aplica tratamento global de exceções para controllers REST
 public class GlobalExceptionHandler {
 
@@ -28,6 +32,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.CONFLICT) // Retorna 409 se tranca estiver ocupada
     @ResponseBody
     public String handleTrancaOcupadaException(TrancaOcupadaException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(TotemNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND) // Retorna 404 se totem não encontrado
+    @ResponseBody
+    public String handleTotemNotFoundException(TotemNotFoundException ex) {
         return ex.getMessage();
     }
 }

@@ -1,4 +1,4 @@
-package scb.microsservico.equipamentos.exception;
+package scb.microsservico.equipamentos.exception.Tranca;
 
 public class TrancaNotFoundException extends RuntimeException {
     public TrancaNotFoundException() {

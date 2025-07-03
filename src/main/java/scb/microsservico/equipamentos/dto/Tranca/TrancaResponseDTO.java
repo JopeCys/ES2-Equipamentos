@@ -1,4 +1,4 @@
-package scb.microsservico.equipamentos.dto;
+package scb.microsservico.equipamentos.dto.Tranca;
 
 import lombok.Data;
 import scb.microsservico.equipamentos.enums.TrancaStatus;

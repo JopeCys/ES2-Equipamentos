@@ -14,6 +14,7 @@ public class Tranca {
     @Id // Chave primária
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto incremento
     private Long id;
+    
     private Long bicicleta;
     private Integer numero;
     private String localizacao;
