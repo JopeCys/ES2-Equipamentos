@@ -1,4 +1,4 @@
-package scb.microsservico.equipamentos.Tranca.exception;
+package scb.microsservico.equipamentos;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.http.converter.HttpMessageNotReadableException;
