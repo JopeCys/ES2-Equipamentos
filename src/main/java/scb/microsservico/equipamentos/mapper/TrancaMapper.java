@@ -2,7 +2,6 @@ package scb.microsservico.equipamentos.mapper;
 
 import scb.microsservico.equipamentos.dto.Tranca.TrancaCreateDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
-import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.model.Tranca;
 
 public class TrancaMapper {
@@ -26,7 +25,6 @@ public class TrancaMapper {
         tranca.setLocalizacao(dto.getLocalizacao());
         tranca.setAnoDeFabricacao(dto.getAnoDeFabricacao());
         tranca.setModelo(dto.getModelo());
-        tranca.setStatus(TrancaStatus.NOVA); // Sempre "NOVA" ao criar
         return tranca;
     }
 }

@@ -8,6 +8,6 @@ class ApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Esse teste verifica se o contexto da aplicação é carregado corretamente.
 	}
-
 }

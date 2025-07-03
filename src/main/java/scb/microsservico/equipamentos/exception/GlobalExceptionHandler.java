@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
 import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
@@ -39,6 +40,13 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND) // Retorna 404 se totem não encontrado
     @ResponseBody
     public String handleTotemNotFoundException(TotemNotFoundException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(BicicletaNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND) // Retorna 404 se bicicleta não encontrada
+    @ResponseBody
+    public String handleBicicletaNotFoundException(BicicletaNotFoundException ex) {
         return ex.getMessage();
     }
 }

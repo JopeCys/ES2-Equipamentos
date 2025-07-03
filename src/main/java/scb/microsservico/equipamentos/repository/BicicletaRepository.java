@@ -1,9 +1,9 @@
 package scb.microsservico.equipamentos.repository;
 
+import scb.microsservico.equipamentos.model.Bicicleta;
 import org.springframework.data.jpa.repository.JpaRepository;
-import scb.microsservico.equipamentos.model.Totem;
 
 // Interface para operações de banco de dados da entidade Bicicleta
-public interface TotemRepository extends JpaRepository<Totem, Long> {
+public interface BicicletaRepository extends JpaRepository<Bicicleta, Long> {
     
 }

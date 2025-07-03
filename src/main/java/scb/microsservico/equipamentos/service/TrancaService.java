@@ -25,6 +25,7 @@ public class TrancaService {
     // Cria uma nova tranca a partir do DTO
     public void criarTranca(TrancaCreateDTO dto) {
         Tranca tranca = TrancaMapper.toEntity(dto);
+        tranca.setStatus(TrancaStatus.NOVA); // Define o status padrão aqui
         trancaRepository.save(tranca);
     }
 

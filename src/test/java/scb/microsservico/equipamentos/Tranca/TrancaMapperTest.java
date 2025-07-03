@@ -49,6 +49,5 @@ class TrancaMapperTest {
         assertEquals("Sala 2", tranca.getLocalizacao());
         assertEquals("2021", tranca.getAnoDeFabricacao());
         assertEquals("Tranca Pro", tranca.getModelo());
-        assertEquals(TrancaStatus.NOVA, tranca.getStatus());
     }
 }
