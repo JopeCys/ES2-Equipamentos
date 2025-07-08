@@ -17,7 +17,6 @@ public class Bicicleta {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto incremento
     private Long id;
 
-    @NotNull
     private Integer numero;
 
     @NotBlank
@@ -29,6 +28,5 @@ public class Bicicleta {
     @NotBlank
     private String ano;
 
-    @NotNull
     private BicicletaStatus status;
 }

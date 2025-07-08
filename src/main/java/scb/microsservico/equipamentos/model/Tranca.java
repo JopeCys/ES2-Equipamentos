@@ -18,10 +18,11 @@ public class Tranca {
     private Long id;
     
     private Integer numerobicicleta;
+    
     private String localizacao;
+
     private Integer bicicleta;
     
-    @NotNull
     private TrancaStatus status;
 
     @NotBlank
