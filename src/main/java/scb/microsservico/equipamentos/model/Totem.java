@@ -1,6 +1,7 @@
 package scb.microsservico.equipamentos.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import java.util.List;
 
@@ -11,10 +12,13 @@ public class Totem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Localização é obrigatória")
     private String localizacao;
-    private String descricao;
 
+    @NotBlank(message = "Descrição é obrigatória")
+    private String descricao;
+    
     @OneToMany
-    @JoinColumn(name = "totem_id")
+    @JoinColumn(name = "idTotem")
     private List<Tranca> trancas;
 }

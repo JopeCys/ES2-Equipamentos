@@ -10,6 +10,9 @@ import scb.microsservico.equipamentos.controller.BicicletaController;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaCreateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaUpdateDTO;
+import scb.microsservico.equipamentos.dto.Bicicleta.IntegrarBicicletaDTO;
+import scb.microsservico.equipamentos.dto.Bicicleta.RetirarBicicletaDTO;
+import scb.microsservico.equipamentos.enums.BicicletaStatus;
 import scb.microsservico.equipamentos.service.BicicletaService;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +40,7 @@ public class BicicletaControllerTest {
         ResponseEntity<String> response = bicicletaController.criarBicicleta(dto);
 
         assertEquals(202, response.getStatusCode().value());
-        assertEquals("Código 202: Bicicleta Cadastrada", response.getBody());
+        assertEquals("Bicicleta Cadastrada", response.getBody());
         verify(bicicletaService, times(1)).criarBicicleta(dto);
     }
 
@@ -90,7 +93,61 @@ public class BicicletaControllerTest {
         ResponseEntity<String> response = bicicletaController.deletarBicicleta(id);
 
         assertEquals(202, response.getStatusCode().value());
-        assertEquals("Código 202: Bicicleta Deletada", response.getBody());
+        assertEquals("Bicicleta Deletada", response.getBody());
         verify(bicicletaService, times(1)).deletarBicicleta(id);
+    }
+@Test
+    void testAlterarStatusBicicleta() {
+        Long idBicicleta = 1L;
+        BicicletaStatus novoStatus = BicicletaStatus.EM_REPARO;
+        
+        BicicletaResponseDTO bicicletaComStatusAlterado = new BicicletaResponseDTO();
+        bicicletaComStatusAlterado.setId(idBicicleta);
+        bicicletaComStatusAlterado.setStatus(novoStatus); 
+
+        doNothing().when(bicicletaService).alterarStatus(idBicicleta, novoStatus);
+        when(bicicletaService.buscarBicicletaPorId(idBicicleta)).thenReturn(bicicletaComStatusAlterado);
+
+        ResponseEntity<BicicletaResponseDTO> response = bicicletaController.alterarStatusBicicleta(idBicicleta, novoStatus);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertNotNull(response.getBody());
+        assertEquals(novoStatus, response.getBody().getStatus());
+        verify(bicicletaService, times(1)).alterarStatus(idBicicleta, novoStatus);
+        verify(bicicletaService, times(1)).buscarBicicletaPorId(idBicicleta);
+    }
+
+    @Test
+    void testIntegrarBicicletaNaRede() {
+        // FIX: Instanciar o DTO e preencher com os setters, usando os tipos corretos.
+        IntegrarBicicletaDTO dto = new IntegrarBicicletaDTO();
+        dto.setIdBicicleta(1L);
+        dto.setIdTranca(10L);
+        dto.setIdFuncionario(100L); // ID do funcionário em vez de uma string de status
+
+        doNothing().when(bicicletaService).integrarBicicletaNaRede(dto);
+
+        ResponseEntity<String> response = bicicletaController.integrarBicicletaNaRede(dto);
+
+        assertEquals(202, response.getStatusCode().value());
+        assertEquals("Bicicleta Integrada", response.getBody());
+        verify(bicicletaService, times(1)).integrarBicicletaNaRede(dto);
+    }
+
+    @Test
+    void testRetirarBicicletaDaRede() {
+        // FIX: Instanciar o DTO e preencher com os setters, usando os tipos corretos.
+        RetirarBicicletaDTO dto = new RetirarBicicletaDTO();
+        dto.setIdBicicleta(1L);
+        dto.setIdTranca(10L);
+        dto.setIdFuncionario(100L);
+
+        doNothing().when(bicicletaService).retirarBicicletaDaRede(dto);
+
+        ResponseEntity<String> response = bicicletaController.retirarBicicletaDaRede(dto);
+
+        assertEquals(202, response.getStatusCode().value());
+        assertEquals("Bicicleta Retirada", response.getBody());
+        verify(bicicletaService, times(1)).retirarBicicletaDaRede(dto);
     }
 }

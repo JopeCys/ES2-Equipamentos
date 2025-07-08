@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import lombok.Data;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
@@ -15,10 +17,19 @@ public class Tranca {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto incremento
     private Long id;
     
-    private Long bicicleta;
-    private Integer numero;
+    private Integer numerobicicleta;
     private String localizacao;
-    private String anoDeFabricacao;
-    private String modelo;
+    private Integer bicicleta;
+    
+    @NotNull
     private TrancaStatus status;
+
+    @NotBlank
+    private Integer numero;
+    
+    @NotBlank
+    private String anoDeFabricacao;
+    
+    @NotBlank
+    private String modelo;
 }

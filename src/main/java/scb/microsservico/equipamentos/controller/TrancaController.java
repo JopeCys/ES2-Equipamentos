@@ -1,15 +1,22 @@
 package scb.microsservico.equipamentos.controller;
 
+import scb.microsservico.equipamentos.dto.Tranca.DestrancarRequestDTO;
+import scb.microsservico.equipamentos.dto.Tranca.IntegrarTrancaDTO;
+import scb.microsservico.equipamentos.dto.Tranca.RetirarTrancaDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancaCreateDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancaUpdateDTO;
 import scb.microsservico.equipamentos.service.TrancaService;
+import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancarRequestDTO;
+import scb.microsservico.equipamentos.enums.TrancaStatus;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -29,7 +36,7 @@ public class TrancaController
     @PostMapping
     public ResponseEntity<String> criarTranca(@RequestBody TrancaCreateDTO dto) {
         trancaService.criarTranca(dto); // Cria nova tranca
-        return ResponseEntity.accepted().body("Código 202: Dados Cadastrados");
+        return ResponseEntity.accepted().body("Dados Cadastrados");
     }
 
     @GetMapping("/{idTranca}")
@@ -55,7 +62,47 @@ public class TrancaController
     @DeleteMapping("/{idTranca}")
     public ResponseEntity<String> deletarTranca(@PathVariable Long idTranca) {
         trancaService.deletarTranca(idTranca); // Deleta tranca
-        return ResponseEntity.accepted().body("Código 202: Tranca Deletada");
+        return ResponseEntity.accepted().body("Tranca Deletada");
     }
 
+    @GetMapping("/{idTranca}/bicicleta")
+    public ResponseEntity<BicicletaResponseDTO> buscarBicicletaNaTranca(@PathVariable Long idTranca) {
+        BicicletaResponseDTO bicicleta = trancaService.buscarBicicletaNaTranca(idTranca);
+        return ResponseEntity.ok(bicicleta);
+    }
+
+    @PostMapping("/{idTranca}/trancar")
+    public ResponseEntity<String> trancarTranca(
+            @PathVariable Long idTranca,
+            @RequestBody(required = false) TrancarRequestDTO dto) {
+        trancaService.trancarTranca(idTranca, dto);
+        return ResponseEntity.accepted().body("Tranca trancada com sucesso");
+    }
+
+    @PostMapping("/{idTranca}/destrancar")
+    public ResponseEntity<String> destrancarTranca(
+            @PathVariable Long idTranca,
+            @RequestBody(required = false) DestrancarRequestDTO dto) {
+        trancaService.destrancarTranca(idTranca, dto);
+        return ResponseEntity.accepted().body("Tranca destrancada com sucesso");
+    }
+
+    @PostMapping("/{idTranca}/status/{acao}")
+    public ResponseEntity<TrancaResponseDTO> alterarStatusTranca(@PathVariable Long idTranca, @PathVariable TrancaStatus acao) {
+        trancaService.alterarStatus(idTranca, acao);
+        TrancaResponseDTO tranca = trancaService.buscarTrancaPorId(idTranca);
+        return ResponseEntity.ok(tranca);
+    }
+
+    @PostMapping("/integrarNaRede")
+    public ResponseEntity<String> integrarNaRede(@RequestBody IntegrarTrancaDTO dto) {
+        trancaService.integrarNaRede(dto);
+        return ResponseEntity.accepted().body("Tranca integrada com sucesso");
+    }
+
+    @PostMapping("/retirarDaRede")
+    public ResponseEntity<String> retirarDaRede(@RequestBody RetirarTrancaDTO dto) {
+        trancaService.retirarDaRede(dto);
+        return ResponseEntity.accepted().body("Tranca retirada com sucesso");
+    }
 }

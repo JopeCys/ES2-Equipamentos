@@ -17,8 +17,8 @@ class TrancaTest {
     @Test
     void testSetAndGetBicicleta() {
         Tranca tranca = new Tranca();
-        tranca.setBicicleta(2L);
-        assertEquals(2L, tranca.getBicicleta());
+        tranca.setBicicleta(2);
+        assertEquals(2, tranca.getBicicleta());
     }
 
     @Test
@@ -60,7 +60,7 @@ class TrancaTest {
     void testEqualsAndHashCode() {
         Tranca t1 = new Tranca();
         t1.setId(1L);
-        t1.setBicicleta(2L);
+        t1.setBicicleta(2);
         t1.setNumero(3);
         t1.setLocalizacao("A");
         t1.setAnoDeFabricacao("2020");
@@ -69,7 +69,7 @@ class TrancaTest {
 
         Tranca t2 = new Tranca();
         t2.setId(1L);
-        t2.setBicicleta(2L);
+        t2.setBicicleta(2);
         t2.setNumero(3);
         t2.setLocalizacao("A");
         t2.setAnoDeFabricacao("2020");
@@ -84,7 +84,7 @@ class TrancaTest {
     void testToString() {
         Tranca tranca = new Tranca();
         tranca.setId(5L);
-        tranca.setBicicleta(6L);
+        tranca.setBicicleta(6);
         tranca.setNumero(7);
         tranca.setLocalizacao("D");
         tranca.setAnoDeFabricacao("2022");

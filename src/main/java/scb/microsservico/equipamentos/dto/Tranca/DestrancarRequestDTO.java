@@ -1,0 +1,8 @@
+package scb.microsservico.equipamentos.dto.Tranca;
+
+import lombok.Data;
+
+@Data
+public class DestrancarRequestDTO {
+    private Long idBicicleta;
+}

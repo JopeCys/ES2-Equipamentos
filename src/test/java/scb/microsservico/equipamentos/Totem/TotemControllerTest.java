@@ -3,15 +3,18 @@ package scb.microsservico.equipamentos.Totem;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import scb.microsservico.equipamentos.controller.TotemController;
+import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemCreateDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemResponseDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemUpdateDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
 import scb.microsservico.equipamentos.service.TotemService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.http.ResponseEntity;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class TotemControllerTest {
@@ -35,7 +38,7 @@ public class TotemControllerTest {
         ResponseEntity<String> response = totemController.criarTotem(dto);
 
         assertThat(response.getStatusCode().value()).isEqualTo(202);
-        assertThat(response.getBody()).isEqualTo("Código 202: Totem Cadastrado");
+        assertThat(response.getBody()).isEqualTo("Totem Cadastrado");
         verify(totemService, times(1)).criarTotem(dto);
     }
 
@@ -88,7 +91,39 @@ public class TotemControllerTest {
         ResponseEntity<String> response = totemController.deletarTotem(id);
 
         assertThat(response.getStatusCode().value()).isEqualTo(202);
-        assertThat(response.getBody()).isEqualTo("Código 202: Totem Deletado");
+        assertThat(response.getBody()).isEqualTo("Totem Deletado");
         verify(totemService, times(1)).deletarTotem(id);
+    }
+
+     @Test
+    void testListarTrancasDoTotem() {
+        // Arrange
+        Long idTotem = 1L;
+        List<TrancaResponseDTO> mockTrancasList = Collections.singletonList(new TrancaResponseDTO());
+        when(totemService.listarTrancasPorTotem(idTotem)).thenReturn(mockTrancasList);
+
+        // Act
+        ResponseEntity<List<TrancaResponseDTO>> response = totemController.listarTrancasDoTotem(idTotem);
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo(mockTrancasList);
+        verify(totemService, times(1)).listarTrancasPorTotem(idTotem);
+    }
+
+    @Test
+    void testListarBicicletasDoTotem() {
+        // Arrange
+        Long idTotem = 1L;
+        List<BicicletaResponseDTO> mockBicicletasList = Collections.singletonList(new BicicletaResponseDTO());
+        when(totemService.listarBicicletasDoTotem(idTotem)).thenReturn(mockBicicletasList);
+
+        // Act
+        ResponseEntity<List<BicicletaResponseDTO>> response = totemController.listarBicicletas(idTotem);
+
+        // Assert
+        assertThat(response.getStatusCode().value()).isEqualTo(200);
+        assertThat(response.getBody()).isEqualTo(mockBicicletasList);
+        verify(totemService, times(1)).listarBicicletasDoTotem(idTotem);
     }
 }

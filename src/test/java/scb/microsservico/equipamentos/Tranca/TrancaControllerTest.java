@@ -4,9 +4,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.ResponseEntity;
 import scb.microsservico.equipamentos.controller.TrancaController;
+import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
+import scb.microsservico.equipamentos.dto.Tranca.DestrancarRequestDTO;
+import scb.microsservico.equipamentos.dto.Tranca.IntegrarTrancaDTO;
+import scb.microsservico.equipamentos.dto.Tranca.RetirarTrancaDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancaCreateDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancaUpdateDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancarRequestDTO;
+import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.service.TrancaService;
 import java.util.Arrays;
 import java.util.List;
@@ -33,7 +39,7 @@ class TrancaControllerTest {
         ResponseEntity<String> response = trancaController.criarTranca(dto);
 
         assertEquals(202, response.getStatusCode().value());
-        assertEquals("Código 202: Dados Cadastrados", response.getBody());
+        assertEquals("Dados Cadastrados", response.getBody());
         verify(trancaService, times(1)).criarTranca(dto);
     }
 
@@ -84,7 +90,87 @@ class TrancaControllerTest {
         ResponseEntity<String> response = trancaController.deletarTranca(id);
 
         assertEquals(202, response.getStatusCode().value());
-        assertEquals("Código 202: Tranca Deletada", response.getBody());
+        assertEquals("Tranca Deletada", response.getBody());
         verify(trancaService, times(1)).deletarTranca(id);
+    }
+
+    @Test
+    void testBuscarBicicletaNaTranca() {
+        Long idTranca = 1L;
+        BicicletaResponseDTO bicicleta = new BicicletaResponseDTO();
+        when(trancaService.buscarBicicletaNaTranca(idTranca)).thenReturn(bicicleta);
+
+        ResponseEntity<BicicletaResponseDTO> response = trancaController.buscarBicicletaNaTranca(idTranca);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(bicicleta, response.getBody());
+        verify(trancaService, times(1)).buscarBicicletaNaTranca(idTranca);
+    }
+
+    @Test
+    void testTrancarTranca() {
+        Long idTranca = 1L;
+        TrancarRequestDTO dto = new TrancarRequestDTO();
+        doNothing().when(trancaService).trancarTranca(idTranca, dto);
+
+        ResponseEntity<String> response = trancaController.trancarTranca(idTranca, dto);
+
+        assertEquals(202, response.getStatusCode().value());
+        assertEquals("Tranca trancada com sucesso", response.getBody());
+        verify(trancaService, times(1)).trancarTranca(idTranca, dto);
+    }
+
+    @Test
+    void testDestrancarTranca() {
+        Long idTranca = 1L;
+        DestrancarRequestDTO dto = new DestrancarRequestDTO();
+        doNothing().when(trancaService).destrancarTranca(idTranca, dto);
+
+        ResponseEntity<String> response = trancaController.destrancarTranca(idTranca, dto);
+
+        assertEquals(202, response.getStatusCode().value());
+        assertEquals("Tranca destrancada com sucesso", response.getBody());
+        verify(trancaService, times(1)).destrancarTranca(idTranca, dto);
+    }
+
+    @Test
+    void testAlterarStatusTranca() {
+        Long idTranca = 1L;
+        TrancaStatus acao = TrancaStatus.EM_REPARO;
+        TrancaResponseDTO trancaResponse = new TrancaResponseDTO();
+
+        doNothing().when(trancaService).alterarStatus(idTranca, acao);
+        when(trancaService.buscarTrancaPorId(idTranca)).thenReturn(trancaResponse);
+
+        ResponseEntity<TrancaResponseDTO> response = trancaController.alterarStatusTranca(idTranca, acao);
+
+        assertEquals(200, response.getStatusCode().value());
+        assertEquals(trancaResponse, response.getBody());
+        verify(trancaService, times(1)).alterarStatus(idTranca, acao);
+        verify(trancaService, times(1)).buscarTrancaPorId(idTranca);
+    }
+
+    @Test
+    void testIntegrarNaRede() {
+        IntegrarTrancaDTO dto = new IntegrarTrancaDTO();
+        doNothing().when(trancaService).integrarNaRede(dto);
+
+        ResponseEntity<String> response = trancaController.integrarNaRede(dto);
+
+        assertEquals(202, response.getStatusCode().value());
+        assertEquals("Tranca integrada com sucesso", response.getBody());
+        verify(trancaService, times(1)).integrarNaRede(dto);
+    }
+
+    @Test
+    void testRetirarDaRede() {
+        RetirarTrancaDTO dto = new RetirarTrancaDTO();
+        doNothing().when(trancaService).retirarDaRede(dto);
+
+        ResponseEntity<String> response = trancaController.retirarDaRede(dto);
+
+        assertEquals(202, response.getStatusCode().value());
+        assertEquals("Tranca retirada com sucesso", response.getBody());
+        verify(trancaService, times(1)).retirarDaRede(dto);
     }
 }

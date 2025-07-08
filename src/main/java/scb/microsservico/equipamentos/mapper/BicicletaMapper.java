@@ -14,8 +14,6 @@ public class BicicletaMapper {
         dto.setModelo(bicicleta.getModelo());
         dto.setAno(bicicleta.getAno());
         dto.setStatus(bicicleta.getStatus());
-        // Supondo que Bicicleta tenha o campo localizacao, caso não tenha, ajuste conforme necessário
-        // dto.setLocalizacao(bicicleta.getLocalizacao());
         return dto;
     }
 
@@ -25,8 +23,6 @@ public class BicicletaMapper {
         bicicleta.setMarca(dto.getMarca());
         bicicleta.setModelo(dto.getModelo());
         bicicleta.setAno(dto.getAno());
-        // Supondo que Bicicleta tenha o campo localizacao, caso não tenha, ajuste conforme necessário
-        // bicicleta.setLocalizacao(dto.getLocalizacao());
         return bicicleta;
     }
 }

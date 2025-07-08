@@ -1,8 +1,10 @@
 package scb.microsservico.equipamentos.controller;
 
+import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemCreateDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemResponseDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemUpdateDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
 import scb.microsservico.equipamentos.service.TotemService;
 
 import org.springframework.http.ResponseEntity;
@@ -29,7 +31,7 @@ public class TotemController
     @PostMapping
     public ResponseEntity<String> criarTotem(@RequestBody TotemCreateDTO dto) {
         totemService.criarTotem(dto); // Cria novo totem
-        return ResponseEntity.accepted().body("Código 202: Totem Cadastrado");
+        return ResponseEntity.accepted().body("Totem Cadastrado");
     }
 
     @GetMapping("/{idTotem}")
@@ -55,6 +57,18 @@ public class TotemController
     @DeleteMapping("/{idTotem}")
     public ResponseEntity<String> deletarTotem(@PathVariable Long idTotem) {
         totemService.deletarTotem(idTotem); // Deleta totem
-        return ResponseEntity.accepted().body("Código 202: Totem Deletado");
+        return ResponseEntity.accepted().body("Totem Deletado");
+    }
+
+   @GetMapping("/{idTotem}/trancas")
+    public ResponseEntity<List<TrancaResponseDTO>> listarTrancasDoTotem(@PathVariable Long idTotem) {
+        List<TrancaResponseDTO> trancasDTO = totemService.listarTrancasPorTotem(idTotem);
+        return ResponseEntity.ok(trancasDTO);
+    }
+
+    @GetMapping("/{idTotem}/bicicletas")
+    public ResponseEntity<List<BicicletaResponseDTO>> listarBicicletas(@PathVariable Long idTotem) {
+        List<BicicletaResponseDTO> bicicletas = totemService.listarBicicletasDoTotem(idTotem);
+        return ResponseEntity.ok(bicicletas);
     }
 }

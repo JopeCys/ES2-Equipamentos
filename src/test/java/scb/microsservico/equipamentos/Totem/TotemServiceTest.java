@@ -3,12 +3,21 @@ package scb.microsservico.equipamentos.Totem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
+
+import jakarta.persistence.EntityNotFoundException;
+import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemCreateDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemResponseDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemUpdateDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancaResponseDTO;
 import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
+import scb.microsservico.equipamentos.mapper.BicicletaMapper;
 import scb.microsservico.equipamentos.mapper.TotemMapper;
+import scb.microsservico.equipamentos.mapper.TrancaMapper;
+import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Totem;
+import scb.microsservico.equipamentos.model.Tranca;
+import scb.microsservico.equipamentos.repository.BicicletaRepository;
 import scb.microsservico.equipamentos.repository.TotemRepository;
 import scb.microsservico.equipamentos.service.TotemService;
 import java.util.*;
@@ -19,6 +28,9 @@ public class TotemServiceTest {
 
     @Mock
     private TotemRepository totemRepository;
+    
+    @Mock
+    private BicicletaRepository bicicletaRepository;
 
     @InjectMocks
     private TotemService totemService;
@@ -139,5 +151,92 @@ public class TotemServiceTest {
 
         assertThatThrownBy(() -> totemService.deletarTotem(id))
                 .isInstanceOf(TotemNotFoundException.class);
+    }
+
+    void testListarTrancasPorTotem_Success() {
+        Long idTotem = 1L;
+        Totem totem = mock(Totem.class);
+        Tranca tranca = mock(Tranca.class);
+        TrancaResponseDTO trancaDTO = mock(TrancaResponseDTO.class);
+
+        when(totemRepository.findById(idTotem)).thenReturn(Optional.of(totem));
+        when(totem.getTrancas()).thenReturn(Collections.singletonList(tranca));
+
+        try (MockedStatic<TrancaMapper> mapper = mockStatic(TrancaMapper.class)) {
+            mapper.when(() -> TrancaMapper.toDTO(tranca)).thenReturn(trancaDTO);
+
+            List<TrancaResponseDTO> result = totemService.listarTrancasPorTotem(idTotem);
+
+            assertThat(result).containsExactly(trancaDTO);
+        }
+    }
+
+    @Test
+    void testListarTrancasPorTotem_NotFound() {
+        Long idTotem = 1L;
+        when(totemRepository.findById(idTotem)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> totemService.listarTrancasPorTotem(idTotem))
+                .isInstanceOf(TotemNotFoundException.class);
+    }
+
+    @Test
+    void testListarBicicletasDoTotem_Success() {
+        // ... (your existing setup code for IDs, totem, trancas, etc.)
+        Long idTotem = 1L;
+        Integer numeroBicicleta = 123;
+
+        Totem totem = mock(Totem.class);
+        Tranca trancaComBicicleta = mock(Tranca.class);
+        Tranca trancaSemBicicleta = mock(Tranca.class);
+        Bicicleta bicicleta = mock(Bicicleta.class);
+        BicicletaResponseDTO bicicletaDTO = mock(BicicletaResponseDTO.class);
+        
+        // Configuration of mocks
+        when(totemRepository.findById(idTotem)).thenReturn(Optional.of(totem));
+        when(totem.getTrancas()).thenReturn(Arrays.asList(trancaComBicicleta, trancaSemBicicleta));
+        when(trancaComBicicleta.getBicicleta()).thenReturn(numeroBicicleta);
+        when(trancaSemBicicleta.getBicicleta()).thenReturn(null);
+
+        // Corrected line: Use the mocked instance 'bicicletaRepository'
+        when(bicicletaRepository.findByNumero(numeroBicicleta)).thenReturn(Optional.of(bicicleta));
+
+        try (MockedStatic<BicicletaMapper> mapper = mockStatic(BicicletaMapper.class)) {
+            mapper.when(() -> BicicletaMapper.toDTO(bicicleta)).thenReturn(bicicletaDTO);
+            
+            // Execution
+            List<BicicletaResponseDTO> result = totemService.listarBicicletasDoTotem(idTotem);
+
+            // Verification
+            assertThat(result).hasSize(1);
+            assertThat(result).containsExactly(bicicletaDTO);
+        }
+    }
+    
+    @Test
+    void testListarBicicletasDoTotem_TotemSemBicicletas() {
+        Long idTotem = 1L;
+        Totem totem = mock(Totem.class);
+        Tranca tranca1 = mock(Tranca.class);
+        Tranca tranca2 = mock(Tranca.class);
+
+        when(totemRepository.findById(idTotem)).thenReturn(Optional.of(totem));
+        when(totem.getTrancas()).thenReturn(Arrays.asList(tranca1, tranca2));
+        when(tranca1.getBicicleta()).thenReturn(null);
+        when(tranca2.getBicicleta()).thenReturn(null);
+
+        List<BicicletaResponseDTO> result = totemService.listarBicicletasDoTotem(idTotem);
+
+        assertThat(result).isEmpty();
+    }
+    
+    @Test
+    void testListarBicicletasDoTotem_TotemNotFound() {
+        Long idTotem = 1L;
+        when(totemRepository.findById(idTotem)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> totemService.listarBicicletasDoTotem(idTotem))
+                .isInstanceOf(EntityNotFoundException.class)
+                .hasMessage("Totem não encontrado com o id: " + idTotem);
     }
 }

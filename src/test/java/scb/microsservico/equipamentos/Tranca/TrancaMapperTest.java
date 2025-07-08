@@ -15,7 +15,7 @@ class TrancaMapperTest {
     void testToDTO() {
         Tranca tranca = new Tranca();
         tranca.setId(1L);
-        tranca.setBicicleta(2L);
+        tranca.setBicicleta(2);
         tranca.setNumero(3);
         tranca.setLocalizacao("Local");
         tranca.setAnoDeFabricacao("2022");
@@ -25,7 +25,7 @@ class TrancaMapperTest {
         TrancaResponseDTO dto = TrancaMapper.toDTO(tranca);
 
         assertEquals(1L, dto.getId());
-        assertEquals(2L, dto.getBicicleta());
+        assertEquals(2, dto.getBicicleta());
         assertEquals(3, dto.getNumero());
         assertEquals("Local", dto.getLocalizacao());
         assertEquals("2022", dto.getAnoDeFabricacao());
