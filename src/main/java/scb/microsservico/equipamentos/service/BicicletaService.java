@@ -106,7 +106,7 @@ public class BicicletaService {
                 .orElseThrow(() -> new EntityNotFoundException("Bicicleta não encontrada com o ID: " + dto.getIdBicicleta()));
 
         // Valida se a tranca já não está com uma bicicleta
-        if (tranca.getNumerobicicleta() != null || tranca.getStatus() == TrancaStatus.OCUPADA) {
+        if (tranca.getBicicleta() != null || tranca.getStatus() == TrancaStatus.OCUPADA) {
             throw new IllegalStateException("A tranca " + tranca.getId() + " já está ocupada.");
         }
 
@@ -120,7 +120,7 @@ public class BicicletaService {
         tranca.setStatus(TrancaStatus.OCUPADA);
         
         // CORREÇÃO 2: Usar o nome do método setter consistente com o getter.
-        tranca.setNumerobicicleta(bicicleta.getNumero()); // Relaciona a bicicleta à tranca
+        tranca.setBicicleta(bicicleta.getNumero()); // Relaciona a bicicleta à tranca
 
         // A bicicleta agora está disponível para uso na rede
         bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
@@ -142,19 +142,19 @@ public class BicicletaService {
                 .orElseThrow(() -> new EntityNotFoundException("Bicicleta não encontrada com o ID: " + dto.getIdBicicleta()));
 
         // Valida se a tranca realmente contém uma bicicleta
-        if (tranca.getNumerobicicleta() == null) {
+        if (tranca.getBicicleta() == null) {
             throw new IllegalStateException("A tranca " + tranca.getId() + " já está livre.");
         }
 
         // Valida se a bicicleta a ser removida é a mesma que está na tranca
-        if (!tranca.getNumerobicicleta().equals(bicicleta.getNumero())) {
+        if (!tranca.getBicicleta().equals(bicicleta.getNumero())) {
             throw new IllegalStateException("A bicicleta " + bicicleta.getId() + " não corresponde à bicicleta registrada na tranca " + tranca.getId() + ".");
         }
 
         // ATUALIZAR O ESTADO DAS ENTIDADES (Processo Inverso)
         
         // Libera a tranca, deixando-a disponível para outra bicicleta
-        tranca.setNumerobicicleta(null); // Remove a referência da bicicleta
+        tranca.setBicicleta(null); // Remove a referência da bicicleta
         tranca.setStatus(TrancaStatus.LIVRE); // Define o status como livre/disponível
 
         // Altera o status da bicicleta para indicar que está em uso

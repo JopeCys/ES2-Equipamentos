@@ -1,11 +1,14 @@
 package scb.microsservico.equipamentos.Bicicleta;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
+import org.mockito.Mockito;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+
 import scb.microsservico.equipamentos.controller.BicicletaController;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaCreateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
@@ -14,140 +17,193 @@ import scb.microsservico.equipamentos.dto.Bicicleta.IntegrarBicicletaDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.RetirarBicicletaDTO;
 import scb.microsservico.equipamentos.enums.BicicletaStatus;
 import scb.microsservico.equipamentos.service.BicicletaService;
-import java.util.Arrays;
+
+import java.util.Collections;
 import java.util.List;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
-public class BicicletaControllerTest {
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-    @Mock
+class BicicletaControllerTest {
+
+    private MockMvc mockMvc;
     private BicicletaService bicicletaService;
-
-    @InjectMocks
-    private BicicletaController bicicletaController;
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        // Mocka a camada de serviço, que é a dependência do nosso controller
+        bicicletaService = Mockito.mock(BicicletaService.class);
+
+        // Instancia o controller manualmente, injetando o serviço mockado
+        BicicletaController bicicletaController = new BicicletaController(bicicletaService);
+        
+        // Configura o MockMvc em modo "standalone", sem carregar o contexto do Spring
+        mockMvc = MockMvcBuilders.standaloneSetup(bicicletaController).build();
+        
+        // Utilitário para converter objetos Java em JSON
+        objectMapper = new ObjectMapper();
     }
 
     @Test
-    void testCriarBicicleta() {
+    @DisplayName("POST /bicicleta - Deve criar bicicleta e retornar status 202 Accepted")
+    void deveCriarBicicletaERetornarAccepted() throws Exception {
+        // Arrange (Organizar)
         BicicletaCreateDTO dto = new BicicletaCreateDTO();
-        doNothing().when(bicicletaService).criarBicicleta(dto);
+        dto.setMarca("Caloi");
+        dto.setModelo("10");
+        dto.setAno("2023");
+        
+        doNothing().when(bicicletaService).criarBicicleta(any(BicicletaCreateDTO.class));
+        
+        // Act & Assert (Agir e Verificar)
+        mockMvc.perform(post("/bicicleta")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+                .andExpect(status().isAccepted())
+                .andExpect(content().string("Bicicleta Cadastrada"));
 
-        ResponseEntity<String> response = bicicletaController.criarBicicleta(dto);
-
-        assertEquals(202, response.getStatusCode().value());
-        assertEquals("Bicicleta Cadastrada", response.getBody());
-        verify(bicicletaService, times(1)).criarBicicleta(dto);
+        verify(bicicletaService).criarBicicleta(any(BicicletaCreateDTO.class));
+    }
+    
+    @Test
+    @DisplayName("GET /bicicleta/{id} - Deve buscar bicicleta por ID e retornar status 200 OK com o DTO")
+    void deveBuscarBicicletaPorIdERetornarOk() throws Exception {
+        // Arrange
+        BicicletaResponseDTO responseDTO = new BicicletaResponseDTO();
+        responseDTO.setId(1L);
+        responseDTO.setMarca("Monark");
+        responseDTO.setModelo("BMX");
+        
+        when(bicicletaService.buscarBicicletaPorId(1L)).thenReturn(responseDTO);
+        
+        // Act & Assert
+        mockMvc.perform(get("/bicicleta/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.marca").value("Monark"));
     }
 
     @Test
-    void testBuscarBicicletaPorId() {
-        Long id = 1L;
-        BicicletaResponseDTO bicicleta = new BicicletaResponseDTO();
-        when(bicicletaService.buscarBicicletaPorId(id)).thenReturn(bicicleta);
+    @DisplayName("GET /bicicleta - Deve buscar todas as bicicletas e retornar status 200 OK com a lista")
+    void deveBuscarTodasBicicletasERetornarOk() throws Exception {
+        // Arrange
+        BicicletaResponseDTO responseDTO = new BicicletaResponseDTO();
+        responseDTO.setId(1L);
+        List<BicicletaResponseDTO> lista = Collections.singletonList(responseDTO);
 
-        ResponseEntity<BicicletaResponseDTO> response = bicicletaController.buscarBicicletaPorId(id);
-
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals(bicicleta, response.getBody());
-        verify(bicicletaService, times(1)).buscarBicicletaPorId(id);
-    }
-
-    @Test
-    void testBuscarTodasBicicletas() {
-        BicicletaResponseDTO b1 = new BicicletaResponseDTO();
-        BicicletaResponseDTO b2 = new BicicletaResponseDTO();
-        List<BicicletaResponseDTO> lista = Arrays.asList(b1, b2);
         when(bicicletaService.buscarTodasBicicletas()).thenReturn(lista);
 
-        ResponseEntity<List<BicicletaResponseDTO>> response = bicicletaController.buscarTodasBicicletas();
-
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals(lista, response.getBody());
-        verify(bicicletaService, times(1)).buscarTodasBicicletas();
+        // Act & Assert
+        mockMvc.perform(get("/bicicleta"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(1));
     }
 
     @Test
-    void testAtualizarBicicleta() {
-        Long id = 1L;
-        BicicletaUpdateDTO dto = new BicicletaUpdateDTO();
-        BicicletaResponseDTO updated = new BicicletaResponseDTO();
-        when(bicicletaService.atualizarBicicleta(id, dto)).thenReturn(updated);
+    @DisplayName("PUT /bicicleta/{id} - Deve atualizar a bicicleta e retornar status 200 OK com o DTO atualizado")
+    void deveAtualizarBicicletaERetornarOk() throws Exception {
+        // Arrange
+        BicicletaUpdateDTO updateDTO = new BicicletaUpdateDTO();
+        updateDTO.setMarca("Nova Marca");
+        
+        BicicletaResponseDTO responseDTO = new BicicletaResponseDTO();
+        responseDTO.setId(1L);
+        responseDTO.setMarca("Nova Marca");
 
-        ResponseEntity<BicicletaResponseDTO> response = bicicletaController.atualizarBicicleta(id, dto);
+        when(bicicletaService.atualizarBicicleta(eq(1L), any(BicicletaUpdateDTO.class))).thenReturn(responseDTO);
 
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals(updated, response.getBody());
-        verify(bicicletaService, times(1)).atualizarBicicleta(id, dto);
+        // Act & Assert
+        mockMvc.perform(put("/bicicleta/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updateDTO)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.marca").value("Nova Marca"));
+    }
+    
+    @Test
+    @DisplayName("DELETE /bicicleta/{id} - Deve deletar a bicicleta e retornar status 202 Accepted")
+    void deveDeletarBicicletaERetornarAccepted() throws Exception {
+        // Arrange
+        doNothing().when(bicicletaService).deletarBicicleta(1L);
+        
+        // Act & Assert
+        mockMvc.perform(delete("/bicicleta/1"))
+                .andExpect(status().isAccepted())
+                .andExpect(content().string("Bicicleta Deletada"));
+        
+        verify(bicicletaService).deletarBicicleta(1L);
     }
 
     @Test
-    void testDeletarBicicleta() {
-        Long id = 1L;
-        doNothing().when(bicicletaService).deletarBicicleta(id);
-
-        ResponseEntity<String> response = bicicletaController.deletarBicicleta(id);
-
-        assertEquals(202, response.getStatusCode().value());
-        assertEquals("Bicicleta Deletada", response.getBody());
-        verify(bicicletaService, times(1)).deletarBicicleta(id);
-    }
-@Test
-    void testAlterarStatusBicicleta() {
+    @DisplayName("POST /bicicleta/{id}/status/{acao} - Deve alterar o status e retornar 200 OK")
+    void deveAlterarStatusERetornarOk() throws Exception {
+        // Arrange
         Long idBicicleta = 1L;
         BicicletaStatus novoStatus = BicicletaStatus.EM_REPARO;
         
-        BicicletaResponseDTO bicicletaComStatusAlterado = new BicicletaResponseDTO();
-        bicicletaComStatusAlterado.setId(idBicicleta);
-        bicicletaComStatusAlterado.setStatus(novoStatus); 
-
+        BicicletaResponseDTO responseDTO = new BicicletaResponseDTO();
+        responseDTO.setId(idBicicleta);
+        responseDTO.setStatus(novoStatus);
+        
         doNothing().when(bicicletaService).alterarStatus(idBicicleta, novoStatus);
-        when(bicicletaService.buscarBicicletaPorId(idBicicleta)).thenReturn(bicicletaComStatusAlterado);
+        when(bicicletaService.buscarBicicletaPorId(idBicicleta)).thenReturn(responseDTO);
 
-        ResponseEntity<BicicletaResponseDTO> response = bicicletaController.alterarStatusBicicleta(idBicicleta, novoStatus);
-
-        assertEquals(200, response.getStatusCode().value());
-        assertNotNull(response.getBody());
-        assertEquals(novoStatus, response.getBody().getStatus());
-        verify(bicicletaService, times(1)).alterarStatus(idBicicleta, novoStatus);
-        verify(bicicletaService, times(1)).buscarBicicletaPorId(idBicicleta);
+        // Act & Assert
+        mockMvc.perform(post("/bicicleta/{idBicicleta}/status/{acao}", idBicicleta, novoStatus))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(idBicicleta))
+            .andExpect(jsonPath("$.status").value(novoStatus.toString()));
+            
+        verify(bicicletaService).alterarStatus(idBicicleta, novoStatus);
+        verify(bicicletaService).buscarBicicletaPorId(idBicicleta);
     }
-
+    
     @Test
-    void testIntegrarBicicletaNaRede() {
-        // FIX: Instanciar o DTO e preencher com os setters, usando os tipos corretos.
+    @DisplayName("POST /bicicleta/integrarNaRede - Deve integrar bicicleta e retornar 202 Accepted")
+    void deveIntegrarBicicletaERetornarAccepted() throws Exception {
+        // Arrange
         IntegrarBicicletaDTO dto = new IntegrarBicicletaDTO();
         dto.setIdBicicleta(1L);
         dto.setIdTranca(10L);
-        dto.setIdFuncionario(100L); // ID do funcionário em vez de uma string de status
-
-        doNothing().when(bicicletaService).integrarBicicletaNaRede(dto);
-
-        ResponseEntity<String> response = bicicletaController.integrarBicicletaNaRede(dto);
-
-        assertEquals(202, response.getStatusCode().value());
-        assertEquals("Bicicleta Integrada", response.getBody());
-        verify(bicicletaService, times(1)).integrarBicicletaNaRede(dto);
+        
+        doNothing().when(bicicletaService).integrarBicicletaNaRede(any(IntegrarBicicletaDTO.class));
+        
+        // Act & Assert
+        mockMvc.perform(post("/bicicleta/integrarNaRede")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isAccepted())
+            .andExpect(content().string("Bicicleta Integrada"));
+            
+        verify(bicicletaService).integrarBicicletaNaRede(any(IntegrarBicicletaDTO.class));
     }
 
     @Test
-    void testRetirarBicicletaDaRede() {
-        // FIX: Instanciar o DTO e preencher com os setters, usando os tipos corretos.
+    @DisplayName("POST /bicicleta/retirarDaRede - Deve retirar bicicleta e retornar 202 Accepted")
+    void deveRetirarBicicletaERetornarAccepted() throws Exception {
+        // Arrange
         RetirarBicicletaDTO dto = new RetirarBicicletaDTO();
         dto.setIdBicicleta(1L);
         dto.setIdTranca(10L);
-        dto.setIdFuncionario(100L);
-
-        doNothing().when(bicicletaService).retirarBicicletaDaRede(dto);
-
-        ResponseEntity<String> response = bicicletaController.retirarBicicletaDaRede(dto);
-
-        assertEquals(202, response.getStatusCode().value());
-        assertEquals("Bicicleta Retirada", response.getBody());
-        verify(bicicletaService, times(1)).retirarBicicletaDaRede(dto);
+        
+        doNothing().when(bicicletaService).retirarBicicletaDaRede(any(RetirarBicicletaDTO.class));
+        
+        // Act & Assert
+        mockMvc.perform(post("/bicicleta/retirarDaRede")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isAccepted())
+            .andExpect(content().string("Bicicleta Retirada"));
+            
+        verify(bicicletaService).retirarBicicletaDaRede(any(RetirarBicicletaDTO.class));
     }
 }

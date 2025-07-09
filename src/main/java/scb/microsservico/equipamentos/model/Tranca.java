@@ -17,20 +17,19 @@ public class Tranca {
     @GeneratedValue(strategy = GenerationType.IDENTITY) // Auto incremento
     private Long id;
     
-    private Integer numerobicicleta;
-    
-    private String localizacao;
-
-    private Integer bicicleta;
-    
-    private TrancaStatus status;
-
-    @NotBlank
+    @NotNull
     private Integer numero;
+    
+    @NotNull
+    private TrancaStatus status;
     
     @NotBlank
     private String anoDeFabricacao;
     
     @NotBlank
     private String modelo;
+    
+    private Integer bicicleta;
+
+    private String localizacao;
 }

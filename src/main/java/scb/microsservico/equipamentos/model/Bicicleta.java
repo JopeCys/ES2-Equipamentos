@@ -5,8 +5,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 import lombok.Data;
 import scb.microsservico.equipamentos.enums.BicicletaStatus;
 
@@ -19,6 +17,8 @@ public class Bicicleta {
 
     private Integer numero;
 
+    private BicicletaStatus status;
+    
     @NotBlank
     private String marca;
 
@@ -28,5 +28,4 @@ public class Bicicleta {
     @NotBlank
     private String ano;
 
-    private BicicletaStatus status;
 }
