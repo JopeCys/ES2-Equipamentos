@@ -9,7 +9,7 @@ class TotemNotFoundExceptionTest {
     @Test
     void testExceptionMessage() {
         TotemNotFoundException exception = new TotemNotFoundException();
-        assertEquals("Error: 404. Totem não foi encontrado!", exception.getMessage());
+        assertEquals("Totem não foi encontrado!", exception.getMessage());
     }
 
     @Test
