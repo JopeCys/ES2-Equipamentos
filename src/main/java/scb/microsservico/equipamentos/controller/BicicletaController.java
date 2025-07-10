@@ -25,28 +25,31 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-@RestController // Define como controller REST
-@RequestMapping("/bicicleta") // Define o endpoint base
-@RequiredArgsConstructor // Injeta dependências via construtor
-public class BicicletaController 
-{
-    private final BicicletaService bicicletaService; // Serviço de bicicleta
+// Define como controller REST
+@RestController
+// Define o endpoint base
+@RequestMapping("/bicicleta")
+// Injeta dependências via construtor
+@RequiredArgsConstructor
+public class BicicletaController {
+    // Serviço de bicicleta
+    private final BicicletaService bicicletaService;
 
     @PostMapping
-    public ResponseEntity<String> criarBicicleta(@RequestBody BicicletaCreateDTO dto) {
-        bicicletaService.criarBicicleta(dto); // Cria nova bicicleta
+    public ResponseEntity<String> criarBicicleta(@Valid @RequestBody BicicletaCreateDTO dto) {
+        bicicletaService.criarBicicleta(dto);
         return ResponseEntity.accepted().body("Bicicleta Cadastrada");
     }
 
     @GetMapping("/{idBicicleta}")
     public ResponseEntity<BicicletaResponseDTO> buscarBicicletaPorId(@PathVariable Long idBicicleta) {
-        BicicletaResponseDTO bicicleta = bicicletaService.buscarBicicletaPorId(idBicicleta); // Busca por ID
+        BicicletaResponseDTO bicicleta = bicicletaService.buscarBicicletaPorId(idBicicleta);
         return ResponseEntity.ok(bicicleta);
     }
 
     @GetMapping
     public ResponseEntity<List<BicicletaResponseDTO>> buscarTodasBicicletas() {
-        List<BicicletaResponseDTO> bicicletas = bicicletaService.buscarTodasBicicletas(); // Busca todas as bicicletas
+        List<BicicletaResponseDTO> bicicletas = bicicletaService.buscarTodasBicicletas();
         return ResponseEntity.ok(bicicletas);
     }
 
@@ -54,21 +57,24 @@ public class BicicletaController
     public ResponseEntity<BicicletaResponseDTO> atualizarBicicleta(
             @PathVariable Long idBicicleta,
             @RequestBody BicicletaUpdateDTO dto) {
-        BicicletaResponseDTO bicicletaAtualizada = bicicletaService.atualizarBicicleta(idBicicleta, dto); // Atualiza bicicleta
+        BicicletaResponseDTO bicicletaAtualizada = bicicletaService.atualizarBicicleta(idBicicleta, dto);
         return ResponseEntity.ok(bicicletaAtualizada);
     }
 
     @DeleteMapping("/{idBicicleta}")
     public ResponseEntity<String> deletarBicicleta(@PathVariable Long idBicicleta) {
-        bicicletaService.deletarBicicleta(idBicicleta); // Deleta bicicleta
+        bicicletaService.deletarBicicleta(idBicicleta);
         return ResponseEntity.accepted().body("Bicicleta Deletada");
     }
 
     @PostMapping("/{idBicicleta}/status/{acao}")
-    public ResponseEntity<BicicletaResponseDTO> alterarStatusBicicleta(@PathVariable Long idBicicleta, @PathVariable BicicletaStatus acao) {
-        bicicletaService.alterarStatus(idBicicleta, acao);
-        BicicletaResponseDTO bicicleta = bicicletaService.buscarBicicletaPorId(idBicicleta);
-        return ResponseEntity.ok(bicicleta);
+    public ResponseEntity<BicicletaResponseDTO> alterarStatusBicicleta(@PathVariable Long idBicicleta, @PathVariable String acao) {
+        // Converte a string da URL para o Enum
+        BicicletaStatus novoStatus = BicicletaStatus.valueOf(acao.toUpperCase());
+
+        bicicletaService.alterarStatus(idBicicleta, novoStatus);
+        BicicletaResponseDTO bicicletaAtualizada = bicicletaService.buscarBicicletaPorId(idBicicleta);
+        return ResponseEntity.ok(bicicletaAtualizada);
     }
 
     @PostMapping("/integrarNaRede")

@@ -2,13 +2,12 @@ package scb.microsservico.equipamentos.Totem;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import scb.microsservico.equipamentos.controller.TotemController;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Totem.TotemCreateDTO;
@@ -19,116 +18,110 @@ import scb.microsservico.equipamentos.service.TotemService;
 
 import java.util.Collections;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+//
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+@WebMvcTest(TotemController.class)
 public class TotemControllerTest {
 
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockitoBean
     private TotemService totemService;
 
-    private MockMvc mockMvc;
-    
+    @Autowired
     private ObjectMapper objectMapper;
+
+    private TotemCreateDTO totemCreateDTO;
+    private TotemResponseDTO totemResponseDTO;
+    private TotemUpdateDTO totemUpdateDTO;
 
     @BeforeEach
     void setUp() {
-        this.totemService = Mockito.mock(TotemService.class);
-        TotemController totemController = new TotemController(totemService);
-        this.mockMvc = MockMvcBuilders.standaloneSetup(totemController).build();
-        this.objectMapper = new ObjectMapper();
+        totemCreateDTO = new TotemCreateDTO();
+        totemCreateDTO.setLocalizacao("Totem Location");
+        totemCreateDTO.setDescricao("Totem Description");
+
+        totemResponseDTO = new TotemResponseDTO();
+        totemResponseDTO.setId(1L);
+        totemResponseDTO.setLocalizacao("Totem Location");
+        totemResponseDTO.setDescricao("Totem Description");
+
+        totemUpdateDTO = new TotemUpdateDTO();
+        totemUpdateDTO.setLocalizacao("Updated Location");
+        totemUpdateDTO.setDescricao("Updated Description");
     }
 
     @Test
-    @DisplayName("Deve criar um totem e retornar status 202 Accepted")
-    void deveCriarTotemComSucesso() throws Exception {
-        TotemCreateDTO dto = new TotemCreateDTO();
+    void testCriarTotem() throws Exception {
         doNothing().when(totemService).criarTotem(any(TotemCreateDTO.class));
 
-        mockMvc.perform(post("/totem") // URL CORRIGIDA
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)))
+        mockMvc.perform(post("/totem")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(totemCreateDTO)))
                 .andExpect(status().isAccepted());
-
-        verify(totemService, times(1)).criarTotem(any(TotemCreateDTO.class));
     }
 
     @Test
-    @DisplayName("Deve buscar totem por ID e retornar status 200 OK")
-    void deveBuscarTotemPorIdComSucesso() throws Exception {
-        Long idTotem = 1L;
-        when(totemService.buscarTotemPorId(idTotem)).thenReturn(new TotemResponseDTO());
+    void testBuscarTotemPorId() throws Exception {
+        when(totemService.buscarTotemPorId(1L)).thenReturn(totemResponseDTO);
 
-        mockMvc.perform(get("/totem/{id}", idTotem)) // URL CORRIGIDA
-                .andExpect(status().isOk());
-
-        verify(totemService, times(1)).buscarTotemPorId(idTotem);
-    }
-
-    @Test
-    @DisplayName("Deve buscar todos os totens e retornar status 200 OK")
-    void deveBuscarTodosOsTotens() throws Exception {
-        when(totemService.buscarTodosTotens()).thenReturn(Collections.singletonList(new TotemResponseDTO()));
-
-        mockMvc.perform(get("/totem")) // URL CORRIGIDA
+        mockMvc.perform(get("/totem/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
-
-        verify(totemService, times(1)).buscarTodosTotens();
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.localizacao").value("Totem Location"));
     }
 
     @Test
-    @DisplayName("Deve atualizar totem e retornar status 200 OK")
-    void deveAtualizarTotemComSucesso() throws Exception {
-        Long idTotem = 1L;
-        TotemUpdateDTO dto = new TotemUpdateDTO();
-        when(totemService.atualizarTotem(eq(idTotem), any(TotemUpdateDTO.class))).thenReturn(new TotemResponseDTO());
+    void testBuscarTodosTotens() throws Exception {
+        when(totemService.buscarTodosTotens()).thenReturn(Collections.singletonList(totemResponseDTO));
 
-        mockMvc.perform(put("/totem/{id}", idTotem) // URL CORRIGIDA
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(dto)))
+        mockMvc.perform(get("/totem"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(1L));
+    }
+
+    @Test
+    void testAtualizarTotem() throws Exception {
+        when(totemService.atualizarTotem(eq(1L), any(TotemUpdateDTO.class))).thenReturn(totemResponseDTO);
+
+        mockMvc.perform(put("/totem/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(totemUpdateDTO)))
                 .andExpect(status().isOk());
-
-        verify(totemService, times(1)).atualizarTotem(eq(idTotem), any(TotemUpdateDTO.class));
     }
 
     @Test
-    @DisplayName("Deve deletar um totem e retornar status 202 Accepted")
-    void deveDeletarTotemComSucesso() throws Exception {
-        Long idTotem = 1L;
-        doNothing().when(totemService).deletarTotem(idTotem);
+    void testDeletarTotem() throws Exception {
+        doNothing().when(totemService).deletarTotem(1L);
 
-        mockMvc.perform(delete("/totem/{id}", idTotem)) // URL CORRIGIDA
+        mockMvc.perform(delete("/totem/1"))
                 .andExpect(status().isAccepted());
-
-        verify(totemService, times(1)).deletarTotem(idTotem);
-    }
-    
-    @Test
-    @DisplayName("Deve listar as trancas de um totem e retornar status 200 OK")
-    void deveListarTrancasDoTotemComSucesso() throws Exception {
-        Long idTotem = 1L;
-        when(totemService.listarTrancasPorTotem(idTotem)).thenReturn(Collections.singletonList(new TrancaResponseDTO()));
-
-        mockMvc.perform(get("/totem/{id}/trancas", idTotem)) // URL CORRIGIDA
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
-
-        verify(totemService, times(1)).listarTrancasPorTotem(idTotem);
     }
 
     @Test
-    @DisplayName("Deve listar as bicicletas de um totem e retornar status 200 OK")
-    void deveListarBicicletasDoTotemComSucesso() throws Exception {
-        Long idTotem = 1L;
-        when(totemService.listarBicicletasDoTotem(idTotem)).thenReturn(Collections.singletonList(new BicicletaResponseDTO()));
+    void testListarTrancasDoTotem() throws Exception {
+        TrancaResponseDTO trancaResponseDTO = new TrancaResponseDTO();
+        trancaResponseDTO.setId(10L);
+        when(totemService.listarTrancasPorTotem(1L)).thenReturn(Collections.singletonList(trancaResponseDTO));
 
-        mockMvc.perform(get("/totem/{id}/bicicletas", idTotem)) // URL CORRIGIDA
+        mockMvc.perform(get("/totem/1/trancas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+                .andExpect(jsonPath("$[0].id").value(10L));
+    }
 
-        verify(totemService, times(1)).listarBicicletasDoTotem(idTotem);
+    @Test
+    void testListarBicicletas() throws Exception {
+        BicicletaResponseDTO bicicletaResponseDTO = new BicicletaResponseDTO();
+        bicicletaResponseDTO.setId(20L);
+        when(totemService.listarBicicletasDoTotem(1L)).thenReturn(Collections.singletonList(bicicletaResponseDTO));
+
+        mockMvc.perform(get("/totem/1/bicicletas"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(20L));
     }
 }

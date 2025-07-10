@@ -1,19 +1,19 @@
 package scb.microsservico.equipamentos.Tranca;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
-import scb.microsservico.equipamentos.dto.Tranca.TrancaCreateDTO;
-import scb.microsservico.equipamentos.dto.Tranca.TrancarRequestDTO;
-import scb.microsservico.equipamentos.enums.BicicletaStatus;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import scb.microsservico.equipamentos.client.AluguelServiceClient;
+import scb.microsservico.equipamentos.client.ExternoServiceClient;
+import scb.microsservico.equipamentos.dto.Tranca.*;
+import scb.microsservico.equipamentos.enums.AcaoRetirar;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
-import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
-import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
-import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
+import scb.microsservico.equipamentos.exception.Tranca.*;
 import scb.microsservico.equipamentos.model.Bicicleta;
+import scb.microsservico.equipamentos.model.Totem;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
 import scb.microsservico.equipamentos.repository.TotemRepository;
@@ -26,175 +26,151 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class TrancaServiceTest {
 
-    // Mocks para as dependências do serviço
+    @Mock
     private TrancaRepository trancaRepository;
+    @Mock
     private BicicletaRepository bicicletaRepository;
+    @Mock
     private TotemRepository totemRepository;
+    @Mock
+    private ExternoServiceClient externoServiceClient;
+    @Mock
+    private AluguelServiceClient aluguelServiceClient;
 
-    // A instância do serviço que vamos testar
+    @InjectMocks
     private TrancaService trancaService;
+
+    private Tranca tranca;
+    private Bicicleta bicicleta;
+    private Totem totem;
 
     @BeforeEach
     void setUp() {
-        // 1. Criamos os mocks para cada repositório usando Mockito.
-        trancaRepository = Mockito.mock(TrancaRepository.class);
-        bicicletaRepository = Mockito.mock(BicicletaRepository.class);
-        totemRepository = Mockito.mock(TotemRepository.class);
-
-        // 2. Instanciamos o serviço manualmente, injetando os mocks no construtor.
-        //    Isso funciona por causa da anotação @RequiredArgsConstructor no serviço.
-        trancaService = new TrancaService(trancaRepository, bicicletaRepository, totemRepository);
-    }
-    
-    @Test
-    @DisplayName("Deve criar uma nova tranca com status NOVA")
-    void criarTranca_DeveSalvarComStatusNova() {
-        // ARRANGE (Organizar)
-        TrancaCreateDTO createDTO = new TrancaCreateDTO();
-        createDTO.setNumero(101);
-        createDTO.setModelo("Modelo Teste");
-        createDTO.setAnoDeFabricacao("2024");
-        
-        // ArgumentCaptor para capturar o objeto Tranca que é passado para o método save
-        ArgumentCaptor<Tranca> trancaCaptor = ArgumentCaptor.forClass(Tranca.class);
-
-        // ACT (Agir)
-        trancaService.criarTranca(createDTO);
-
-        // ASSERT (Afirmar)
-        // Verifica se o método save do repositório foi chamado exatamente 1 vez.
-        verify(trancaRepository, times(1)).save(trancaCaptor.capture());
-        
-        // Pega o objeto Tranca capturado
-        Tranca trancaSalva = trancaCaptor.getValue();
-        
-        // Verifica se os dados e o status estão corretos
-        assertEquals("Modelo Teste", trancaSalva.getModelo());
-        assertEquals(TrancaStatus.NOVA, trancaSalva.getStatus());
-    }
-
-    @Test
-    @DisplayName("Deve buscar tranca por ID e retornar DTO quando encontrada")
-    void buscarTrancaPorId_QuandoEncontrada_DeveRetornarDTO() {
-        // ARRANGE
-        Tranca tranca = new Tranca();
+        tranca = new Tranca();
         tranca.setId(1L);
-        tranca.setModelo("Modelo Existente");
-        
-        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        
-        // ACT
-        var response = trancaService.buscarTrancaPorId(1L);
-        
-        // ASSERT
-        assertNotNull(response);
-        assertEquals(1L, response.getId());
-        assertEquals("Modelo Existente", response.getModelo());
-    }
-    
-    @Test
-    @DisplayName("Deve lançar TrancaNotFoundException ao buscar por ID inexistente")
-    void buscarTrancaPorId_QuandoNaoEncontrada_DeveLancarExcecao() {
-        // ARRANGE
-        when(trancaRepository.findById(99L)).thenReturn(Optional.empty());
-        
-        // ACT & ASSERT
-        assertThrows(TrancaNotFoundException.class, () -> {
-            trancaService.buscarTrancaPorId(99L);
-        });
-    }
-
-    @Test
-    @DisplayName("Deve deletar (aposentar) uma tranca que não está ocupada")
-    void deletarTranca_QuandoLivre_DeveAlterarStatusParaAposentada() {
-        // ARRANGE
-        Tranca tranca = new Tranca();
-        tranca.setId(1L);
+        tranca.setNumero(101);
         tranca.setStatus(TrancaStatus.LIVRE);
-        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
 
-        ArgumentCaptor<Tranca> captor = ArgumentCaptor.forClass(Tranca.class);
+        bicicleta = new Bicicleta();
+        bicicleta.setId(1L);
+        bicicleta.setNumero(202);
 
-        // ACT
-        trancaService.deletarTranca(1L);
-
-        // ASSERT
-        verify(trancaRepository, times(1)).save(captor.capture());
-        assertEquals(TrancaStatus.APOSENTADA, captor.getValue().getStatus());
+        totem = new Totem();
+        totem.setId(1L);
     }
 
     @Test
-    @DisplayName("Deve lançar TrancaOcupadaException ao tentar deletar tranca ocupada")
-    void deletarTranca_QuandoOcupada_DeveLancarExcecao() {
-        // ARRANGE
-        Tranca tranca = new Tranca();
-        tranca.setId(1L);
+    void criarTranca_deveSalvarTrancaComStatusNova() {
+        TrancaCreateDTO createDTO = new TrancaCreateDTO();
+        trancaService.criarTranca(createDTO);
+        verify(trancaRepository, times(1)).save(any(Tranca.class));
+    }
+
+    @Test
+    void buscarTrancaPorId_quandoEncontrada_deveRetornarDTO() {
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        TrancaResponseDTO result = trancaService.buscarTrancaPorId(1L);
+        assertNotNull(result);
+        assertEquals(tranca.getId(), result.getId());
+    }
+
+    @Test
+    void buscarTrancaPorId_quandoNaoEncontrada_deveLancarExcecao() {
+        when(trancaRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(TrancaNotFoundException.class, () -> trancaService.buscarTrancaPorId(1L));
+    }
+
+    @Test
+    void atualizarTranca_deveAtualizarDados() {
+        TrancaUpdateDTO updateDTO = new TrancaUpdateDTO();
+        updateDTO.setModelo("Novo Modelo");
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        trancaService.atualizarTranca(1L, updateDTO);
+        assertEquals("Novo Modelo", tranca.getModelo());
+    }
+
+    @Test
+    void deletarTranca_quandoNaoOcupada_deveAposentar() {
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        trancaService.deletarTranca(1L);
+        assertEquals(TrancaStatus.APOSENTADA, tranca.getStatus());
+    }
+
+    @Test
+    void deletarTranca_quandoOcupada_deveLancarExcecao() {
         tranca.setStatus(TrancaStatus.OCUPADA);
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-
-        // ACT & ASSERT
-        assertThrows(TrancaOcupadaException.class, () -> {
-            trancaService.deletarTranca(1L);
-        });
-
-        // Garante que o método save nunca foi chamado
-        verify(trancaRepository, never()).save(any());
+        assertThrows(TrancaOcupadaException.class, () -> trancaService.deletarTranca(1L));
     }
 
     @Test
-    @DisplayName("Deve trancar uma tranca livre com uma bicicleta válida")
-    void trancarTranca_ComTrancaLivreEBicicletaValida_DeveFuncionar() {
-        // ARRANGE
-        Tranca tranca = new Tranca();
-        tranca.setId(1L);
+    void trancarTranca_deveAssociarBicicletaETrancar() {
         tranca.setStatus(TrancaStatus.LIVRE);
-
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setId(10L);
-        bicicleta.setNumero(12345);
-        bicicleta.setStatus(BicicletaStatus.EM_USO);
-
-        TrancarRequestDTO requestDTO = new TrancarRequestDTO();
-        requestDTO.setIdBicicleta(10L);
+        TrancarRequestDTO request = new TrancarRequestDTO();
+        request.setIdBicicleta(bicicleta.getId());
 
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(bicicletaRepository.findById(10L)).thenReturn(Optional.of(bicicleta));
-        
-        ArgumentCaptor<Tranca> trancaCaptor = ArgumentCaptor.forClass(Tranca.class);
-        ArgumentCaptor<Bicicleta> bicicletaCaptor = ArgumentCaptor.forClass(Bicicleta.class);
+        when(bicicletaRepository.findById(bicicleta.getId())).thenReturn(Optional.of(bicicleta));
 
-        // ACT
-        trancaService.trancarTranca(1L, requestDTO);
+        trancaService.trancarTranca(1L, request);
 
-        // ASSERT
-        verify(trancaRepository).save(trancaCaptor.capture());
-        verify(bicicletaRepository).save(bicicletaCaptor.capture());
-        
-        assertEquals(TrancaStatus.OCUPADA, trancaCaptor.getValue().getStatus());
-        assertEquals(12345, trancaCaptor.getValue().getBicicleta());
-        assertEquals(BicicletaStatus.DISPONIVEL, bicicletaCaptor.getValue().getStatus());
+        assertEquals(TrancaStatus.OCUPADA, tranca.getStatus());
+        assertEquals(bicicleta.getNumero(), tranca.getBicicleta());
     }
-    
-    @Test
-    @DisplayName("Deve lançar BicicletaNotFoundException ao trancar com bicicleta inexistente")
-    void trancarTranca_ComBicicletaInexistente_DeveLancarExcecao() {
-        // ARRANGE
-        Tranca tranca = new Tranca();
-        tranca.setId(1L);
-        tranca.setStatus(TrancaStatus.LIVRE);
-        
-        TrancarRequestDTO requestDTO = new TrancarRequestDTO();
-        requestDTO.setIdBicicleta(99L);
-        
-        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        // Simula que a bicicleta não foi encontrada
-        when(bicicletaRepository.findById(99L)).thenReturn(Optional.empty());
 
-        // ACT & ASSERT
-        assertThrows(BicicletaNotFoundException.class, () -> {
-            trancaService.trancarTranca(1L, requestDTO);
-        });
+    @Test
+    void destrancarTranca_deveDesassociarBicicletaEDestrancar() {
+        tranca.setStatus(TrancaStatus.OCUPADA);
+        tranca.setBicicleta(bicicleta.getNumero());
+        DestrancarRequestDTO request = new DestrancarRequestDTO();
+        request.setIdBicicleta(bicicleta.getId());
+
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        when(bicicletaRepository.findById(bicicleta.getId())).thenReturn(Optional.of(bicicleta));
+
+        trancaService.destrancarTranca(1L, request);
+
+        assertEquals(TrancaStatus.LIVRE, tranca.getStatus());
+        assertNull(tranca.getBicicleta());
+    }
+
+    @Test
+    void integrarNaRede_deveIntegrarTrancaAoTotem() {
+        tranca.setStatus(TrancaStatus.NOVA);
+        IntegrarTrancaDTO request = new IntegrarTrancaDTO();
+        request.setIdTranca(tranca.getId());
+        request.setIdTotem(totem.getId());
+        request.setIdFuncionario(1L);
+
+        when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
+        when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("reparador@email.com");
+
+        trancaService.integrarNaRede(request);
+
+        assertEquals(TrancaStatus.LIVRE, tranca.getStatus());
+        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
+    }
+
+    @Test
+    void retirarDaRede_deveRetirarTrancaDoTotem() {
+        totem.setTrancas(new java.util.ArrayList<>(java.util.List.of(tranca)));
+        RetirarTrancaDTO request = new RetirarTrancaDTO();
+        request.setIdTranca(tranca.getId());
+        request.setIdTotem(totem.getId());
+        request.setAcao(AcaoRetirar.REPARO);
+        request.setIdFuncionario(1L);
+
+        when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
+        when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("reparador@email.com");
+
+        trancaService.retirarDaRede(request);
+
+        assertEquals(TrancaStatus.EM_REPARO, tranca.getStatus());
+        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
     }
 }

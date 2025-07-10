@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import lombok.Data;
+
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 
 @Data // Gera getters, setters e outros métodos automaticamente
@@ -28,8 +29,8 @@ public class Tranca {
     
     @NotBlank
     private String modelo;
-    
-    private Integer bicicleta;
 
-    private String localizacao;
+    private Integer bicicleta; // Número da bicicleta associada, funciona como chave estrangeira (OneToOne)
+
+    private String localizacao; // Localização da tranca, é a localização do totem onde ela está instalada
 }

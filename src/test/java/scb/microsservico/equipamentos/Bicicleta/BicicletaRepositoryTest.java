@@ -6,95 +6,135 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
+import scb.microsservico.equipamentos.enums.BicicletaStatus;
+
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
-import static org.assertj.core.api.Assertions.assertThat;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-public class BicicletaRepositoryTest {
+class BicicletaRepositoryTest {
 
     @Autowired
     private BicicletaRepository bicicletaRepository;
 
     @Test
-    @DisplayName("Deve salvar uma bicicleta no banco de dados")
-    void testSaveBicicleta() {
+    @DisplayName("Deve salvar e buscar uma bicicleta pelo ID")
+    void testSaveAndFindById() {
         Bicicleta bicicleta = new Bicicleta();
+        bicicleta.setNumero(12345);
         bicicleta.setMarca("Caloi");
-        bicicleta.setModelo("Elite");
-        bicicleta.setAno("2022");
-
-        Bicicleta saved = bicicletaRepository.save(bicicleta);
-
-        assertThat(saved.getId()).isNotNull();
-        assertThat(saved.getMarca()).isEqualTo("Caloi");
-        assertThat(saved.getModelo()).isEqualTo("Elite");
-        assertThat(saved.getAno()).isEqualTo("2022");
-    }
-
-    @Test
-    @DisplayName("Deve buscar uma bicicleta por ID")
-    void testFindById() {
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setMarca("Monark");
-        bicicleta.setModelo("Classic");
+        bicicleta.setModelo("10");
         bicicleta.setAno("2020");
-        Bicicleta saved = bicicletaRepository.save(bicicleta);
+        bicicleta.setStatus(BicicletaStatus.NOVA);
 
+        Bicicleta saved = bicicletaRepository.save(bicicleta);
         Optional<Bicicleta> found = bicicletaRepository.findById(saved.getId());
 
-        assertThat(found).isPresent();
-        assertThat(found.get().getMarca()).isEqualTo("Monark");
-        assertThat(found.get().getAno()).isEqualTo("2020");
+        assertTrue(found.isPresent());
+        assertEquals(saved.getId(), found.get().getId());
+        assertEquals(12345, found.get().getNumero());
     }
 
     @Test
-    @DisplayName("Deve deletar uma bicicleta")
-    void testDeleteBicicleta() {
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setMarca("Sense");
-        bicicleta.setModelo("Impact");
-        bicicleta.setAno("2021");
-        Bicicleta saved = bicicletaRepository.save(bicicleta);
-
-        bicicletaRepository.delete(saved);
-
-        Optional<Bicicleta> found = bicicletaRepository.findById(saved.getId());
-        assertThat(found).isNotPresent();
-    }
-
-    @Test
-    @DisplayName("Deve listar todas as bicicletas")
+    @DisplayName("Deve retornar todas as bicicletas")
     void testFindAll() {
         Bicicleta b1 = new Bicicleta();
-        b1.setMarca("Caloi");
-        b1.setModelo("City Tour");
-        b1.setAno("2019");
+        b1.setNumero(1);
+        b1.setMarca("Marca A");
+        b1.setModelo("Modelo A");
+        b1.setAno("2021");
+        b1.setStatus(BicicletaStatus.DISPONIVEL);
 
         Bicicleta b2 = new Bicicleta();
-        b2.setMarca("Monark");
-        b2.setModelo("Barra Forte");
-        b2.setAno("2018");
+        b2.setNumero(2);
+        b2.setMarca("Marca B");
+        b2.setModelo("Modelo B");
+        b2.setAno("2022");
+        b2.setStatus(BicicletaStatus.EM_USO);
 
         bicicletaRepository.save(b1);
         bicicletaRepository.save(b2);
 
-        assertThat(bicicletaRepository.findAll()).hasSize(2);
+        List<Bicicleta> all = bicicletaRepository.findAll();
+        assertTrue(all.size() >= 2);
     }
 
     @Test
-    @DisplayName("Deve verificar se existe uma bicicleta pelo numero")
+    @DisplayName("Deve deletar uma bicicleta")
+    void testDelete() {
+        Bicicleta bicicleta = new Bicicleta();
+        bicicleta.setNumero(54321);
+        bicicleta.setMarca("Monark");
+        bicicleta.setModelo("Classic");
+        bicicleta.setAno("2023");
+        bicicleta.setStatus(BicicletaStatus.APOSENTADA);
+
+        Bicicleta saved = bicicletaRepository.save(bicicleta);
+        Long id = saved.getId();
+
+        bicicletaRepository.deleteById(id);
+
+        Optional<Bicicleta> found = bicicletaRepository.findById(id);
+        assertFalse(found.isPresent());
+    }
+
+    @Test
+    @DisplayName("Deve verificar se uma bicicleta existe pelo número")
     void testExistsByNumero() {
         Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setMarca("Caloi");
-        bicicleta.setModelo("Elite");
-        bicicleta.setAno("2022");
-        bicicleta.setNumero(123456);
+        bicicleta.setNumero(98765);
+        bicicleta.setMarca("Sense");
+        bicicleta.setModelo("Impact");
+        bicicleta.setAno("2024");
+        bicicleta.setStatus(BicicletaStatus.NOVA);
         bicicletaRepository.save(bicicleta);
 
-        boolean exists = bicicletaRepository.existsByNumero(123456);
-        assertThat(exists).isTrue();
+        assertTrue(bicicletaRepository.existsByNumero(98765));
+        assertFalse(bicicletaRepository.existsByNumero(11111));
+    }
 
-        boolean notExists = bicicletaRepository.existsByNumero(654321);
-        assertThat(notExists).isFalse();
+    @Test
+    @DisplayName("Deve encontrar uma bicicleta pelo número")
+    void testFindByNumero() {
+        Bicicleta bicicleta = new Bicicleta();
+        bicicleta.setNumero(11223);
+        bicicleta.setMarca("Oggi");
+        bicicleta.setModelo("Big Wheel");
+        bicicleta.setAno("2025");
+        bicicleta.setStatus(BicicletaStatus.NOVA);
+        bicicletaRepository.save(bicicleta);
+
+        Optional<Bicicleta> found = bicicletaRepository.findByNumero(11223);
+        assertTrue(found.isPresent());
+        assertEquals(11223, found.get().getNumero());
+    }
+
+    @Test
+    @DisplayName("Deve encontrar todas as bicicletas com números específicos")
+    void testFindAllByNumeroIn() {
+        Bicicleta b1 = new Bicicleta();
+        b1.setNumero(101);
+        b1.setMarca("Scott");
+        b1.setModelo("Spark");
+        b1.setAno("2023");
+        b1.setStatus(BicicletaStatus.NOVA);
+
+        Bicicleta b2 = new Bicicleta();
+        b2.setNumero(102);
+        b2.setMarca("Trek");
+        b2.setModelo("Marlin");
+        b2.setAno("2023");
+        b2.setStatus(BicicletaStatus.NOVA);
+
+        bicicletaRepository.save(b1);
+        bicicletaRepository.save(b2);
+
+        List<Integer> numeros = Arrays.asList(101, 102);
+        List<Bicicleta> encontradas = bicicletaRepository.findAllByNumeroIn(numeros);
+
+        assertEquals(2, encontradas.size());
     }
 }

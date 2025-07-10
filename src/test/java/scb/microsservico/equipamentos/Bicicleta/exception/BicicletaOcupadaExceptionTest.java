@@ -10,7 +10,7 @@ public class BicicletaOcupadaExceptionTest {
     @Test
     void testExceptionMessage() {
         BicicletaOcupadaException exception = new BicicletaOcupadaException();
-        assertEquals("Error: 409. Não é possível deletar uma bicicleta EM USO!", exception.getMessage());
+        assertEquals("Não é possível deletar uma bicicleta EM USO!", exception.getMessage());
     }
 
     @Test

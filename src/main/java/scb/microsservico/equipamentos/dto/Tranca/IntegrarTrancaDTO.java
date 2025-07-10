@@ -1,15 +1,16 @@
 package scb.microsservico.equipamentos.dto.Tranca;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-@Data
+@Data // Gera getters, setters e outros métodos automaticamente
 public class IntegrarTrancaDTO {
-     // @NotNull
+    @NotNull
     private Long idTranca;
 
-    // @NotNull
+    @NotNull
     private Long idTotem;
 
-    // @NotNull
+    @NotNull
     private Long idFuncionario;
 }

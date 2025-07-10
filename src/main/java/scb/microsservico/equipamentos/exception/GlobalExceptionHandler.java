@@ -1,52 +1,87 @@
 package scb.microsservico.equipamentos.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
+import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaOcupadaException;
+import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
+import scb.microsservico.equipamentos.exception.Tranca.TrancaJaIntegradaException;
+import scb.microsservico.equipamentos.exception.Tranca.TrancaLivreException;
+import scb.microsservico.equipamentos.exception.Tranca.TrancaNaoIntegradaException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
-import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
 
-@RestControllerAdvice // Aplica tratamento global de exceções para controllers REST
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(TrancaNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) // Retorna 404 se tranca não encontrada
+    // Manipuladores para exceções de Bicicleta
+    @ExceptionHandler(BicicletaNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Not Found
     @ResponseBody
-    public String handleTrancaNotFoundException(TrancaNotFoundException ex) {
+    public String handleBicicletaNotFoundException(BicicletaNotFoundException ex) {
         return ex.getMessage();
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY) // Retorna 422 para dados inválidos
+    @ExceptionHandler(BicicletaOcupadaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
     @ResponseBody
-    public String handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        return "Error: 422. Dados inválidos!";
-    }
-
-    @ExceptionHandler(TrancaOcupadaException.class)
-    @ResponseStatus(HttpStatus.CONFLICT) // Retorna 409 se tranca estiver ocupada
-    @ResponseBody
-    public String handleTrancaOcupadaException(TrancaOcupadaException ex) {
+    public String handleBicicletaOcupadaException(BicicletaOcupadaException ex) {
         return ex.getMessage();
     }
 
+    // Manipulador para exceções de Totem
     @ExceptionHandler(TotemNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) // Retorna 404 se totem não encontrado
+    @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Not Found
     @ResponseBody
     public String handleTotemNotFoundException(TotemNotFoundException ex) {
         return ex.getMessage();
     }
 
-    @ExceptionHandler(BicicletaNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) // Retorna 404 se bicicleta não encontrada
+    // Manipuladores para exceções de Tranca
+    @ExceptionHandler(TrancaNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Not Found
     @ResponseBody
-    public String handleBicicletaNotFoundException(BicicletaNotFoundException ex) {
+    public String handleTrancaNotFoundException(TrancaNotFoundException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(TrancaOcupadaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
+    @ResponseBody
+    public String handleTrancaOcupadaException(TrancaOcupadaException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(TrancaLivreException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
+    @ResponseBody
+    public String handleTrancaLivreException(TrancaLivreException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(TrancaJaIntegradaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
+    @ResponseBody
+    public String handleTrancaJaIntegradaException(TrancaJaIntegradaException ex) {
+        return ex.getMessage();
+    }
+
+    @ExceptionHandler(TrancaNaoIntegradaException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
+    @ResponseBody
+    public String handleTrancaNaoIntegradaException(TrancaNaoIntegradaException ex) {
+        return ex.getMessage();
+    }
+
+    // Manipulador para exceções de estado ilegal
+    @ExceptionHandler(IllegalStateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
+    @ResponseBody
+    public String handleIllegalStateException(IllegalStateException ex) {
         return ex.getMessage();
     }
 }

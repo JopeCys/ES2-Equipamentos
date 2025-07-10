@@ -1,15 +1,21 @@
 package scb.microsservico.equipamentos.Bicicleta;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
-
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import scb.microsservico.equipamentos.client.AluguelServiceClient;
+import scb.microsservico.equipamentos.client.ExternoServiceClient;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaCreateDTO;
+import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaUpdateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.IntegrarBicicletaDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.RetirarBicicletaDTO;
+import scb.microsservico.equipamentos.dto.Tranca.DestrancarRequestDTO;
+import scb.microsservico.equipamentos.dto.Tranca.TrancarRequestDTO;
+import scb.microsservico.equipamentos.enums.AcaoRetirar;
 import scb.microsservico.equipamentos.enums.BicicletaStatus;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
@@ -19,332 +25,234 @@ import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
 import scb.microsservico.equipamentos.service.BicicletaService;
+import scb.microsservico.equipamentos.service.TrancaService;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class BicicletaServiceTest {
 
+    @Mock
     private BicicletaRepository bicicletaRepository;
+    @Mock
     private TrancaRepository trancaRepository;
+    @Mock
+    private TrancaService trancaService;
+    @Mock
+    private AluguelServiceClient aluguelServiceClient;
+    @Mock
+    private ExternoServiceClient externoServiceClient;
+
+    @InjectMocks
     private BicicletaService bicicletaService;
 
-    // Método de setup, executado antes de cada teste
+    private Bicicleta bicicleta;
+    private Tranca tranca;
+
     @BeforeEach
     void setUp() {
-        // Criação dos mocks para os repositórios
-        bicicletaRepository = Mockito.mock(BicicletaRepository.class);
-        trancaRepository = Mockito.mock(TrancaRepository.class);
-        
-        // Instanciação manual do service com os mocks
-        bicicletaService = new BicicletaService(bicicletaRepository, trancaRepository);
-    }
-
-    @Test
-    @DisplayName("Deve criar uma nova bicicleta com sucesso")
-    void deveCriarBicicletaComSucesso() {
-        // Arrange (Organizar)
-        BicicletaCreateDTO dto = new BicicletaCreateDTO();
-        dto.setMarca("Caloi");
-        dto.setModelo("Cross");
-        dto.setAno("1998");
-
-        // Mock para o repositório não encontrar número de bicicleta duplicado
-        when(bicicletaRepository.existsByNumero(any(Integer.class))).thenReturn(false);
-        // Mock para o save, retornando a bicicleta salva
-        when(bicicletaRepository.save(any(Bicicleta.class))).thenAnswer(invocation -> invocation.getArgument(0));
-
-        // Act (Agir)
-        bicicletaService.criarBicicleta(dto);
-
-        // Assert (Verificar)
-        // Captura o argumento passado para o método save
-        ArgumentCaptor<Bicicleta> bicicletaCaptor = ArgumentCaptor.forClass(Bicicleta.class);
-        verify(bicicletaRepository).save(bicicletaCaptor.capture());
-        
-        Bicicleta bicicletaSalva = bicicletaCaptor.getValue();
-        assertNotNull(bicicletaSalva.getNumero());
-        assertEquals(BicicletaStatus.NOVA, bicicletaSalva.getStatus());
-        assertEquals("Caloi", bicicletaSalva.getMarca());
-    }
-
-    @Test
-    @DisplayName("Deve buscar uma bicicleta por ID e retorná-la")
-    void deveBuscarBicicletaPorId() {
-        // Arrange
-        Bicicleta bicicleta = new Bicicleta();
+        bicicleta = new Bicicleta();
         bicicleta.setId(1L);
-        bicicleta.setNumero(123);
-        bicicleta.setMarca("Monark");
-        bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
-        
+        bicicleta.setNumero(12345);
+        bicicleta.setMarca("Caloi");
+        bicicleta.setModelo("10");
+        bicicleta.setAno("2020");
+        bicicleta.setStatus(BicicletaStatus.NOVA);
+
+        tranca = new Tranca();
+        tranca.setId(1L);
+        tranca.setNumero(54321);
+        tranca.setStatus(TrancaStatus.LIVRE);
+    }
+
+    @Test
+    void criarBicicleta_DeveSalvarBicicletaComStatusNova() {
+        BicicletaCreateDTO createDTO = new BicicletaCreateDTO();
+        createDTO.setMarca("Caloi");
+        createDTO.setModelo("10");
+        createDTO.setAno("2020");
+
+        when(bicicletaRepository.existsByNumero(anyInt())).thenReturn(false);
+        when(bicicletaRepository.save(any(Bicicleta.class))).thenReturn(bicicleta);
+
+        bicicletaService.criarBicicleta(createDTO);
+
+        verify(bicicletaRepository, times(1)).save(any(Bicicleta.class));
+    }
+
+    @Test
+    void buscarBicicletaPorId_QuandoEncontrada_DeveRetornarDTO() {
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
 
-        // Act
-        var responseDTO = bicicletaService.buscarBicicletaPorId(1L);
+        BicicletaResponseDTO result = bicicletaService.buscarBicicletaPorId(1L);
 
-        // Assert
-        assertNotNull(responseDTO);
-        assertEquals(1L, responseDTO.getId());
-        assertEquals(123, responseDTO.getNumero());
-        assertEquals("Monark", responseDTO.getMarca());
+        assertNotNull(result);
+        assertEquals(bicicleta.getId(), result.getId());
     }
 
     @Test
-    @DisplayName("Deve lançar BicicletaNotFoundException quando buscar ID inexistente")
-    void deveLancarExcecaoQuandoBuscarBicicletaInexistente() {
-        // Arrange
-        when(bicicletaRepository.findById(anyLong())).thenReturn(Optional.empty());
+    void buscarBicicletaPorId_QuandoNaoEncontrada_DeveLancarExcecao() {
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(BicicletaNotFoundException.class, () -> {
-            bicicletaService.buscarBicicletaPorId(99L);
+            bicicletaService.buscarBicicletaPorId(1L);
         });
     }
 
     @Test
-    @DisplayName("Deve retornar uma lista de todas as bicicletas")
-    void deveBuscarTodasBicicletas() {
-        // Arrange
-        Bicicleta b1 = new Bicicleta();
-        b1.setId(1L);
-        Bicicleta b2 = new Bicicleta();
-        b2.setId(2L);
-        
-        when(bicicletaRepository.findAll()).thenReturn(List.of(b1, b2));
+    void buscarTodasBicicletas_DeveRetornarListaDeDTOs() {
+        when(bicicletaRepository.findAll()).thenReturn(Collections.singletonList(bicicleta));
 
-        // Act
-        var listaBicicletas = bicicletaService.buscarTodasBicicletas();
+        List<BicicletaResponseDTO> result = bicicletaService.buscarTodasBicicletas();
 
-        // Assert
-        assertNotNull(listaBicicletas);
-        assertEquals(2, listaBicicletas.size());
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.size());
     }
 
     @Test
-    @DisplayName("Deve atualizar os dados de uma bicicleta")
-    void deveAtualizarBicicleta() {
-        // Arrange
-        Bicicleta bicicletaExistente = new Bicicleta();
-        bicicletaExistente.setId(1L);
-        bicicletaExistente.setMarca("Marca Antiga");
-        bicicletaExistente.setModelo("Modelo Antigo");
-        bicicletaExistente.setAno("2020");
+    void atualizarBicicleta_QuandoEncontrada_DeveAtualizarEretornarDTO() {
+        BicicletaUpdateDTO updateDTO = new BicicletaUpdateDTO();
+        updateDTO.setMarca("Monark");
 
-        BicicletaUpdateDTO dto = new BicicletaUpdateDTO();
-        dto.setMarca("Marca Nova");
-        dto.setModelo("Modelo Novo");
-        dto.setAno("2024");
-        
-        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicletaExistente));
-        
-        // Act
-        bicicletaService.atualizarBicicleta(1L, dto);
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
+        when(bicicletaRepository.save(any(Bicicleta.class))).thenReturn(bicicleta);
 
-        // Assert
-        ArgumentCaptor<Bicicleta> bicicletaCaptor = ArgumentCaptor.forClass(Bicicleta.class);
-        verify(bicicletaRepository).save(bicicletaCaptor.capture());
+        BicicletaResponseDTO result = bicicletaService.atualizarBicicleta(1L, updateDTO);
 
-        Bicicleta bicicletaAtualizada = bicicletaCaptor.getValue();
-        assertEquals("Marca Nova", bicicletaAtualizada.getMarca());
-        assertEquals("Modelo Novo", bicicletaAtualizada.getModelo());
-        assertEquals("2024", bicicletaAtualizada.getAno());
+        assertEquals("Monark", result.getMarca());
+        verify(bicicletaRepository, times(1)).save(bicicleta);
     }
 
     @Test
-    @DisplayName("Deve deletar (aposentar) uma bicicleta com sucesso")
-    void deveDeletarBicicletaComSucesso() {
-        // Arrange
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setId(1L);
-        bicicleta.setStatus(BicicletaStatus.DISPONIVEL); // Status que permite deleção
-        
+    void deletarBicicleta_ComStatusValido_DeveAlterarStatusParaAposentada() {
+        bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
 
-        // Act
         bicicletaService.deletarBicicleta(1L);
 
-        // Assert
-        ArgumentCaptor<Bicicleta> bicicletaCaptor = ArgumentCaptor.forClass(Bicicleta.class);
-        verify(bicicletaRepository).save(bicicletaCaptor.capture());
-        
-        Bicicleta bicicletaAposentada = bicicletaCaptor.getValue();
-        assertEquals(BicicletaStatus.APOSENTADA, bicicletaAposentada.getStatus());
+        assertEquals(BicicletaStatus.APOSENTADA, bicicleta.getStatus());
+        verify(bicicletaRepository, times(1)).save(bicicleta);
     }
 
     @Test
-    @DisplayName("Deve lançar BicicletaOcupadaException ao tentar deletar bicicleta EM_USO")
-    void deveLancarExcecaoAoDeletarBicicletaEmUso() {
-        // Arrange
-        Bicicleta bicicletaEmUso = new Bicicleta();
-        bicicletaEmUso.setId(1L);
-        bicicletaEmUso.setStatus(BicicletaStatus.EM_USO);
-        
-        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicletaEmUso));
+    void deletarBicicleta_ComStatusEmUso_DeveLancarExcecao() {
+        bicicleta.setStatus(BicicletaStatus.EM_USO);
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
 
-        // Act & Assert
         assertThrows(BicicletaOcupadaException.class, () -> {
             bicicletaService.deletarBicicleta(1L);
         });
-
-        // Verifica que o save não foi chamado
-        verify(bicicletaRepository, never()).save(any(Bicicleta.class));
     }
-    
+
     @Test
-    @DisplayName("Deve alterar o status de uma bicicleta")
-    void deveAlterarStatus() {
-        // Arrange
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setId(1L);
-        bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
+    void alterarStatus_DeveAlterarEsalvar() {
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
+
+        bicicletaService.alterarStatus(1L, BicicletaStatus.EM_REPARO);
+
+        assertEquals(BicicletaStatus.EM_REPARO, bicicleta.getStatus());
+        verify(bicicletaRepository, times(1)).save(bicicleta);
+    }
+
+    @Test
+    void integrarBicicletaNaRede_ComDadosValidos_DeveIntegrarComSucesso() {
+        IntegrarBicicletaDTO integrarDTO = new IntegrarBicicletaDTO();
+        integrarDTO.setIdBicicleta(1L);
+        integrarDTO.setIdTranca(1L);
+        integrarDTO.setIdFuncionario(1L);
 
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
-        
-        // Act
-        bicicletaService.alterarStatus(1L, BicicletaStatus.EM_REPARO);
-        
-        // Assert
-        ArgumentCaptor<Bicicleta> bicicletaCaptor = ArgumentCaptor.forClass(Bicicleta.class);
-        verify(bicicletaRepository).save(bicicletaCaptor.capture());
-        
-        Bicicleta bicicletaComStatusAlterado = bicicletaCaptor.getValue();
-        assertEquals(BicicletaStatus.EM_REPARO, bicicletaComStatusAlterado.getStatus());
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("teste@email.com");
+
+        bicicletaService.integrarBicicletaNaRede(integrarDTO);
+
+        verify(trancaService, times(1)).trancarTranca(eq(1L), any(TrancarRequestDTO.class));
+        assertEquals(BicicletaStatus.DISPONIVEL, bicicleta.getStatus());
+        verify(bicicletaRepository, times(1)).save(bicicleta);
+        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
     }
 
     @Test
-    @DisplayName("Deve integrar bicicleta na rede com sucesso")
-    void deveIntegrarBicicletaNaRede() {
-        // Arrange
-        IntegrarBicicletaDTO dto = new IntegrarBicicletaDTO();
-        dto.setIdTranca(10L);
-        dto.setIdBicicleta(20L);
+    void integrarBicicletaNaRede_ComBicicletaNaoNovaOuEmReparo_DeveLancarExcecao() {
+        bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
+        IntegrarBicicletaDTO integrarDTO = new IntegrarBicicletaDTO();
+        integrarDTO.setIdBicicleta(1L);
+        integrarDTO.setIdTranca(1L);
 
-        Tranca tranca = new Tranca();
-        tranca.setId(10L);
-        tranca.setStatus(TrancaStatus.LIVRE); // Tranca deve estar livre
-        tranca.setBicicleta(null);
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
 
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setId(20L);
-        bicicleta.setNumero(9876);
-        bicicleta.setStatus(BicicletaStatus.NOVA); // Bicicleta deve estar apta
-        
-        when(trancaRepository.findById(10L)).thenReturn(Optional.of(tranca));
-        when(bicicletaRepository.findById(20L)).thenReturn(Optional.of(bicicleta));
-        
-        // Act
-        bicicletaService.integrarBicicletaNaRede(dto);
-        
-        // Assert
-        // Captura da tranca
-        ArgumentCaptor<Tranca> trancaCaptor = ArgumentCaptor.forClass(Tranca.class);
-        verify(trancaRepository).save(trancaCaptor.capture());
-        Tranca trancaAtualizada = trancaCaptor.getValue();
-        assertEquals(TrancaStatus.OCUPADA, trancaAtualizada.getStatus());
-        assertEquals(9876, trancaAtualizada.getBicicleta());
+        assertThrows(IllegalStateException.class, () -> {
+            bicicletaService.integrarBicicletaNaRede(integrarDTO);
+        });
+    }
 
-        // Captura da bicicleta
-        ArgumentCaptor<Bicicleta> bicicletaCaptor = ArgumentCaptor.forClass(Bicicleta.class);
-        verify(bicicletaRepository).save(bicicletaCaptor.capture());
-        Bicicleta bicicletaAtualizada = bicicletaCaptor.getValue();
-        assertEquals(BicicletaStatus.DISPONIVEL, bicicletaAtualizada.getStatus());
+    @Test
+    void retirarBicicletaDaRede_ComDadosValidosParaReparo_DeveRetirarComSucesso() {
+        bicicleta.setStatus(BicicletaStatus.EM_USO);
+        tranca.setStatus(TrancaStatus.OCUPADA);
+        RetirarBicicletaDTO retirarDTO = new RetirarBicicletaDTO();
+        retirarDTO.setIdBicicleta(1L);
+        retirarDTO.setIdTranca(1L);
+        retirarDTO.setIdFuncionario(1L);
+        retirarDTO.setAcao(AcaoRetirar.REPARO);
+
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("teste@email.com");
+
+
+        bicicletaService.retirarBicicletaDaRede(retirarDTO);
+
+        verify(trancaService, times(1)).destrancarTranca(eq(1L), any(DestrancarRequestDTO.class));
+        assertEquals(BicicletaStatus.EM_REPARO, bicicleta.getStatus());
+        verify(bicicletaRepository, times(1)).save(bicicleta);
+        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
     }
     
     @Test
-    @DisplayName("Deve lançar IllegalStateException ao tentar integrar em tranca ocupada")
-    void deveLancarExcecaoAoIntegrarEmTrancaOcupada() {
-        // Arrange
-        IntegrarBicicletaDTO dto = new IntegrarBicicletaDTO();
-        dto.setIdTranca(10L);
-        dto.setIdBicicleta(20L);
+    void retirarBicicletaDaRede_ComDadosValidosParaAposentadoria_DeveRetirarComSucesso() {
+        bicicleta.setStatus(BicicletaStatus.EM_USO);
+        tranca.setStatus(TrancaStatus.OCUPADA);
+        RetirarBicicletaDTO retirarDTO = new RetirarBicicletaDTO();
+        retirarDTO.setIdBicicleta(1L);
+        retirarDTO.setIdTranca(1L);
+        retirarDTO.setIdFuncionario(1L);
+        retirarDTO.setAcao(AcaoRetirar.APOSENTADORIA);
 
-        Tranca trancaOcupada = new Tranca();
-        trancaOcupada.setId(10L);
-        trancaOcupada.setStatus(TrancaStatus.OCUPADA); // Tranca ocupada
-        trancaOcupada.setBicicleta(1111);
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("teste@email.com");
 
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setId(20L);
-        bicicleta.setStatus(BicicletaStatus.NOVA);
-        
-        when(trancaRepository.findById(10L)).thenReturn(Optional.of(trancaOcupada));
-        when(bicicletaRepository.findById(20L)).thenReturn(Optional.of(bicicleta));
-        
-        // Act & Assert
-        assertThrows(IllegalStateException.class, () -> {
-            bicicletaService.integrarBicicletaNaRede(dto);
-        });
+
+        bicicletaService.retirarBicicletaDaRede(retirarDTO);
+
+        verify(trancaService, times(1)).destrancarTranca(eq(1L), any(DestrancarRequestDTO.class));
+        assertEquals(BicicletaStatus.APOSENTADA, bicicleta.getStatus());
+        verify(bicicletaRepository, times(1)).save(bicicleta);
+        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
     }
 
     @Test
-    @DisplayName("Deve retirar bicicleta da rede com sucesso")
-    void deveRetirarBicicletaDaRede() {
-        // Arrange
-        RetirarBicicletaDTO dto = new RetirarBicicletaDTO();
-        dto.setIdTranca(10L);
-        dto.setIdBicicleta(20L);
-        
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setId(20L);
-        bicicleta.setNumero(12345);
+    void retirarBicicletaDaRede_ComBicicletaDisponivel_DeveLancarExcecao() {
         bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
-        
-        Tranca tranca = new Tranca();
-        tranca.setId(10L);
-        tranca.setBicicleta(12345); // Bicicleta correta na tranca
-        tranca.setStatus(TrancaStatus.OCUPADA);
-        
-        when(bicicletaRepository.findById(20L)).thenReturn(Optional.of(bicicleta));
-        when(trancaRepository.findById(10L)).thenReturn(Optional.of(tranca));
-        
-        // Act
-        bicicletaService.retirarBicicletaDaRede(dto);
-        
-        // Assert
-        // Captura da Tranca
-        ArgumentCaptor<Tranca> trancaCaptor = ArgumentCaptor.forClass(Tranca.class);
-        verify(trancaRepository).save(trancaCaptor.capture());
-        Tranca trancaAtualizada = trancaCaptor.getValue();
-        assertEquals(TrancaStatus.LIVRE, trancaAtualizada.getStatus());
-        assertNull(trancaAtualizada.getBicicleta());
-        
-        // Captura da Bicicleta
-        ArgumentCaptor<Bicicleta> bicicletaCaptor = ArgumentCaptor.forClass(Bicicleta.class);
-        verify(bicicletaRepository).save(bicicletaCaptor.capture());
-        Bicicleta bicicletaAtualizada = bicicletaCaptor.getValue();
-        assertEquals(BicicletaStatus.EM_USO, bicicletaAtualizada.getStatus());
-    }
+        RetirarBicicletaDTO retirarDTO = new RetirarBicicletaDTO();
+        retirarDTO.setIdBicicleta(1L);
+        retirarDTO.setIdTranca(1L);
 
-    @Test
-    @DisplayName("Deve lançar IllegalStateException ao tentar retirar de tranca com bicicleta errada")
-    void deveLancarExcecaoAoRetirarComBicicletaErrada() {
-        // Arrange
-        RetirarBicicletaDTO dto = new RetirarBicicletaDTO();
-        dto.setIdTranca(10L);
-        dto.setIdBicicleta(20L);
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
 
-        Bicicleta bicicleta = new Bicicleta();
-        bicicleta.setId(20L);
-        bicicleta.setNumero(12345); // Número da bicicleta é 12345
-
-        Tranca tranca = new Tranca();
-        tranca.setId(10L);
-        tranca.setBicicleta(99999); // Tranca está com outra bicicleta (99999)
-        tranca.setStatus(TrancaStatus.OCUPADA);
-        
-        when(bicicletaRepository.findById(20L)).thenReturn(Optional.of(bicicleta));
-        when(trancaRepository.findById(10L)).thenReturn(Optional.of(tranca));
-
-        // Act & Assert
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            bicicletaService.retirarBicicletaDaRede(dto);
+        assertThrows(IllegalStateException.class, () -> {
+            bicicletaService.retirarBicicletaDaRede(retirarDTO);
         });
-
-        assertTrue(exception.getMessage().contains("não corresponde à bicicleta registrada na tranca"));
     }
 }

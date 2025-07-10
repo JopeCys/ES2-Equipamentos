@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,42 +28,45 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-@RestController // Define como controller REST
-@RequestMapping("/tranca") // Define o endpoint base
-@RequiredArgsConstructor // Injeta dependências via construtor
-public class TrancaController 
-{
-    private final TrancaService trancaService; // Serviço de tranca
-    
+// Define como controller REST
+@RestController
+// Define o endpoint base
+@RequestMapping("/tranca")
+// Injeta dependências via construtor
+@RequiredArgsConstructor
+public class TrancaController {
+    // Serviço de tranca
+    private final TrancaService trancaService;
+
     @PostMapping
-    public ResponseEntity<String> criarTranca(@RequestBody TrancaCreateDTO dto) {
-        trancaService.criarTranca(dto); // Cria nova tranca
+    public ResponseEntity<String> criarTranca(@Valid @RequestBody TrancaCreateDTO dto) {
+        trancaService.criarTranca(dto);
         return ResponseEntity.accepted().body("Dados Cadastrados");
     }
 
     @GetMapping("/{idTranca}")
     public ResponseEntity<TrancaResponseDTO> buscarTrancaPorId(@PathVariable Long idTranca) {
-        TrancaResponseDTO tranca = trancaService.buscarTrancaPorId(idTranca); // Busca por ID
+        TrancaResponseDTO tranca = trancaService.buscarTrancaPorId(idTranca);
         return ResponseEntity.ok(tranca);
     }
 
     @GetMapping
     public ResponseEntity<List<TrancaResponseDTO>> buscarTodasTrancas() {
-        List<TrancaResponseDTO> trancas = trancaService.buscarTodasTrancas(); // Busca todas as trancas
+        List<TrancaResponseDTO> trancas = trancaService.buscarTodasTrancas();
         return ResponseEntity.ok(trancas);
     }
 
     @PutMapping("/{idTranca}")
     public ResponseEntity<TrancaResponseDTO> atualizarTranca(
             @PathVariable Long idTranca,
-            @RequestBody TrancaUpdateDTO dto) {
-        TrancaResponseDTO trancaAtualizada = trancaService.atualizarTranca(idTranca, dto); // Atualiza tranca
+            @Valid @RequestBody TrancaUpdateDTO dto) {
+        TrancaResponseDTO trancaAtualizada = trancaService.atualizarTranca(idTranca, dto);
         return ResponseEntity.ok(trancaAtualizada);
     }
 
     @DeleteMapping("/{idTranca}")
     public ResponseEntity<String> deletarTranca(@PathVariable Long idTranca) {
-        trancaService.deletarTranca(idTranca); // Deleta tranca
+        trancaService.deletarTranca(idTranca);
         return ResponseEntity.accepted().body("Tranca Deletada");
     }
 
@@ -74,7 +79,7 @@ public class TrancaController
     @PostMapping("/{idTranca}/trancar")
     public ResponseEntity<String> trancarTranca(
             @PathVariable Long idTranca,
-            @RequestBody(required = false) TrancarRequestDTO dto) {
+            @RequestBody TrancarRequestDTO dto) {
         trancaService.trancarTranca(idTranca, dto);
         return ResponseEntity.accepted().body("Tranca trancada com sucesso");
     }
@@ -82,26 +87,29 @@ public class TrancaController
     @PostMapping("/{idTranca}/destrancar")
     public ResponseEntity<String> destrancarTranca(
             @PathVariable Long idTranca,
-            @RequestBody(required = false) DestrancarRequestDTO dto) {
+            @RequestBody DestrancarRequestDTO dto) {
         trancaService.destrancarTranca(idTranca, dto);
         return ResponseEntity.accepted().body("Tranca destrancada com sucesso");
     }
 
     @PostMapping("/{idTranca}/status/{acao}")
-    public ResponseEntity<TrancaResponseDTO> alterarStatusTranca(@PathVariable Long idTranca, @PathVariable TrancaStatus acao) {
-        trancaService.alterarStatus(idTranca, acao);
-        TrancaResponseDTO tranca = trancaService.buscarTrancaPorId(idTranca);
-        return ResponseEntity.ok(tranca);
+    public ResponseEntity<TrancaResponseDTO> alterarStatusTranca(@PathVariable Long idTranca, @PathVariable String acao) {
+        // Converte a string da URL para o Enum
+        TrancaStatus novoStatus = TrancaStatus.valueOf(acao.toUpperCase());
+
+        trancaService.alterarStatus(idTranca, novoStatus);
+        TrancaResponseDTO trancaAtualizada = trancaService.buscarTrancaPorId(idTranca);
+        return ResponseEntity.ok(trancaAtualizada);
     }
 
     @PostMapping("/integrarNaRede")
-    public ResponseEntity<String> integrarNaRede(@RequestBody IntegrarTrancaDTO dto) {
+    public ResponseEntity<String> integrarNaRede(@Valid @RequestBody IntegrarTrancaDTO dto) {
         trancaService.integrarNaRede(dto);
         return ResponseEntity.accepted().body("Tranca integrada com sucesso");
     }
 
     @PostMapping("/retirarDaRede")
-    public ResponseEntity<String> retirarDaRede(@RequestBody RetirarTrancaDTO dto) {
+    public ResponseEntity<String> retirarDaRede(@Valid @RequestBody RetirarTrancaDTO dto) {
         trancaService.retirarDaRede(dto);
         return ResponseEntity.accepted().body("Tranca retirada com sucesso");
     }

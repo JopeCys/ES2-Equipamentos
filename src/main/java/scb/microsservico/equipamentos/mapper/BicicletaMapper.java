@@ -13,6 +13,7 @@ public class BicicletaMapper {
         dto.setMarca(bicicleta.getMarca());
         dto.setModelo(bicicleta.getModelo());
         dto.setAno(bicicleta.getAno());
+        dto.setLocalizacao(bicicleta.getLocalizacao());
         dto.setStatus(bicicleta.getStatus());
         return dto;
     }

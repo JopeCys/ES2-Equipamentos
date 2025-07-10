@@ -1,71 +1,52 @@
 package scb.microsservico.equipamentos.Tranca.dto;
 
-import org.junit.jupiter.api.Test;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 
 import scb.microsservico.equipamentos.dto.Tranca.TrancaCreateDTO;
 
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class TrancaCreateDTOTest {
 
-    @Test
-    void testSetAndGetNumero() {
-        TrancaCreateDTO dto = new TrancaCreateDTO();
-        dto.setNumero(123);
-        assertEquals(123, dto.getNumero());
+    private Validator validator;
+
+    @BeforeEach
+    void setUp() {
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
     }
 
     @Test
-    void testSetAndGetLocalizacao() {
-        TrancaCreateDTO dto = new TrancaCreateDTO();
-        dto.setLocalizacao("Bloco A");
-        assertEquals("Bloco A", dto.getLocalizacao());
-    }
-
-    @Test
-    void testSetAndGetAnoDeFabricacao() {
-        TrancaCreateDTO dto = new TrancaCreateDTO();
-        dto.setAnoDeFabricacao("2023");
-        assertEquals("2023", dto.getAnoDeFabricacao());
-    }
-
-    @Test
-    void testSetAndGetModelo() {
-        TrancaCreateDTO dto = new TrancaCreateDTO();
-        dto.setModelo("Modelo X");
-        assertEquals("Modelo X", dto.getModelo());
-    }
-
-    @Test
-    void testAllArgs() {
+    void testGettersAndSetters() {
         TrancaCreateDTO dto = new TrancaCreateDTO();
         dto.setNumero(10);
-        dto.setLocalizacao("Sala 2");
-        dto.setAnoDeFabricacao("2022");
-        dto.setModelo("Tranca Pro");
+        dto.setAnoDeFabricacao("2023");
+        dto.setModelo("Modelo X");
 
-        assertAll(
-            () -> assertEquals(10, dto.getNumero()),
-            () -> assertEquals("Sala 2", dto.getLocalizacao()),
-            () -> assertEquals("2022", dto.getAnoDeFabricacao()),
-            () -> assertEquals("Tranca Pro", dto.getModelo())
-        );
+        assertEquals(10, dto.getNumero());
+        assertEquals("2023", dto.getAnoDeFabricacao());
+        assertEquals("Modelo X", dto.getModelo());
     }
 
     @Test
     void testEqualsAndHashCode() {
         TrancaCreateDTO dto1 = new TrancaCreateDTO();
-        dto1.setNumero(1);
-        dto1.setLocalizacao("A");
-        dto1.setAnoDeFabricacao("2020");
-        dto1.setModelo("M1");
+        dto1.setNumero(10);
+        dto1.setAnoDeFabricacao("2023");
+        dto1.setModelo("Modelo X");
 
         TrancaCreateDTO dto2 = new TrancaCreateDTO();
-        dto2.setNumero(1);
-        dto2.setLocalizacao("A");
-        dto2.setAnoDeFabricacao("2020");
-        dto2.setModelo("M1");
+        dto2.setNumero(10);
+        dto2.setAnoDeFabricacao("2023");
+        dto2.setModelo("Modelo X");
 
         assertEquals(dto1, dto2);
         assertEquals(dto1.hashCode(), dto2.hashCode());
@@ -75,14 +56,46 @@ class TrancaCreateDTOTest {
     void testToString() {
         TrancaCreateDTO dto = new TrancaCreateDTO();
         dto.setNumero(5);
-        dto.setLocalizacao("B");
-        dto.setAnoDeFabricacao("2021");
+        dto.setAnoDeFabricacao("2022");
         dto.setModelo("M2");
 
         String str = dto.toString();
         assertTrue(str.contains("numero=5"));
-        assertTrue(str.contains("localizacao=B"));
-        assertTrue(str.contains("anoDeFabricacao=2021"));
+        assertTrue(str.contains("anoDeFabricacao=2022"));
         assertTrue(str.contains("modelo=M2"));
+    }
+
+    @Test
+    void testNumeroNaoNulo() {
+        TrancaCreateDTO dto = new TrancaCreateDTO();
+        dto.setAnoDeFabricacao("2023");
+        dto.setModelo("Modelo Válido");
+
+        Set<ConstraintViolation<TrancaCreateDTO>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
+        assertEquals(1, violations.size());
+        assertEquals("não deve ser nulo", violations.iterator().next().getMessage());
+    }
+
+    @Test
+    void testAnoDeFabricacaoNaoVazio() {
+        TrancaCreateDTO dto = new TrancaCreateDTO();
+        dto.setNumero(123);
+        dto.setAnoDeFabricacao("");
+        dto.setModelo("Modelo Válido");
+
+        Set<ConstraintViolation<TrancaCreateDTO>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
+    }
+
+    @Test
+    void testModeloNaoVazio() {
+        TrancaCreateDTO dto = new TrancaCreateDTO();
+        dto.setNumero(123);
+        dto.setAnoDeFabricacao("2023");
+        dto.setModelo("");
+
+        Set<ConstraintViolation<TrancaCreateDTO>> violations = validator.validate(dto);
+        assertFalse(violations.isEmpty());
     }
 }

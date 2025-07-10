@@ -17,32 +17,37 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 
+import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
 
-@RestController // Define como controller REST
-@RequestMapping("/totem") // Define o endpoint base
-@RequiredArgsConstructor // Injeta dependências via construtor
-public class TotemController 
-{
-    private final TotemService totemService; // Serviço de totem
+// Define como controller REST
+@RestController
+// Define o endpoint base
+@RequestMapping("/totem")
+// Injeta dependências via construtor
+@RequiredArgsConstructor
+public class TotemController {
+    // Serviço de totem
+    private final TotemService totemService;
 
     @PostMapping
-    public ResponseEntity<String> criarTotem(@RequestBody TotemCreateDTO dto) {
-        totemService.criarTotem(dto); // Cria novo totem
+    public ResponseEntity<String> criarTotem(@Valid @RequestBody TotemCreateDTO dto) {
+        totemService.criarTotem(dto);
         return ResponseEntity.accepted().body("Totem Cadastrado");
     }
 
     @GetMapping("/{idTotem}")
     public ResponseEntity<TotemResponseDTO> buscarTotemPorId(@PathVariable Long idTotem) {
-        TotemResponseDTO totem = totemService.buscarTotemPorId(idTotem); // Busca por ID
+        TotemResponseDTO totem = totemService.buscarTotemPorId(idTotem);
         return ResponseEntity.ok(totem);
     }
 
     @GetMapping
     public ResponseEntity<List<TotemResponseDTO>> buscarTodosTotens() {
-        List<TotemResponseDTO> totens = totemService.buscarTodosTotens(); // Busca todos os totens
+        List<TotemResponseDTO> totens = totemService.buscarTodosTotens();
         return ResponseEntity.ok(totens);
     }
 
@@ -50,13 +55,13 @@ public class TotemController
     public ResponseEntity<TotemResponseDTO> atualizarTotem(
             @PathVariable Long idTotem,
             @RequestBody TotemUpdateDTO dto) {
-        TotemResponseDTO totemAtualizado = totemService.atualizarTotem(idTotem, dto); // Atualiza totem
+        TotemResponseDTO totemAtualizado = totemService.atualizarTotem(idTotem, dto);
         return ResponseEntity.ok(totemAtualizado);
     }
 
     @DeleteMapping("/{idTotem}")
     public ResponseEntity<String> deletarTotem(@PathVariable Long idTotem) {
-        totemService.deletarTotem(idTotem); // Deleta totem
+        totemService.deletarTotem(idTotem);
         return ResponseEntity.accepted().body("Totem Deletado");
     }
 
@@ -68,7 +73,7 @@ public class TotemController
 
     @GetMapping("/{idTotem}/bicicletas")
     public ResponseEntity<List<BicicletaResponseDTO>> listarBicicletas(@PathVariable Long idTotem) {
-        List<BicicletaResponseDTO> bicicletas = totemService.listarBicicletasDoTotem(idTotem);
-        return ResponseEntity.ok(bicicletas);
+        List<BicicletaResponseDTO> bicicletasDTO = totemService.listarBicicletasDoTotem(idTotem);
+        return ResponseEntity.ok(bicicletasDTO);
     }
 }

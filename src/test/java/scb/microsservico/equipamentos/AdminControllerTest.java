@@ -1,31 +1,35 @@
 package scb.microsservico.equipamentos;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.MockMvc;
 import scb.microsservico.equipamentos.controller.AdminController;
 import scb.microsservico.equipamentos.service.AdminService;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
 
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+
+@WebMvcTest(AdminController.class)
 public class AdminControllerTest {
 
-    private AdminService adminService;
-    private AdminController adminController;
+    @Autowired
+    private MockMvc mockMvc;
 
-    @BeforeEach
-    public void setUp() {
-        adminService = Mockito.mock(AdminService.class);
-        adminController = new AdminController(adminService);
-    }
+    @MockitoBean
+    private AdminService adminService;
 
     @Test
-    public void testRestaurarBanco_callsServiceAndReturnsOk() {
-        ResponseEntity<String> response = adminController.restaurarBanco();
+    public void testRestaurarBanco() throws Exception {
+        mockMvc.perform(get("/restaurarBanco"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Banco de dados de equipamentos restaurado com sucesso."));
 
         verify(adminService, times(1)).restaurarBanco();
-        assertEquals(200, response.getStatusCode().value());
-        assertEquals("Banco de dados de equipamentos restaurado com sucesso.", response.getBody());
     }
 }

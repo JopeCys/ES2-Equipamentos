@@ -26,10 +26,12 @@ import scb.microsservico.equipamentos.repository.TotemRepository;
 @Service // Indica que é um serviço do Spring
 @RequiredArgsConstructor // Injeta dependências via construtor
 public class TotemService {
-    private final TotemRepository totemRepository;
-    private final BicicletaRepository bicicletaRepository;  // Repositório para acesso ao banco
 
-    // Cria um novo totem
+    // Repositórios para acesso ao banco
+    private final TotemRepository totemRepository;
+    private final BicicletaRepository bicicletaRepository;
+
+    // Cria um novo totem 
     public void criarTotem(TotemCreateDTO dto) {
         Totem totem = TotemMapper.toEntity(dto);
         totemRepository.save(totem);
@@ -80,26 +82,27 @@ public class TotemService {
                 .collect(Collectors.toList());
     }
 
-     public List<BicicletaResponseDTO> listarBicicletasDoTotem(Long idTotem) {
-        // 1. Busca o totem pelo ID. Se não encontrar, lança uma exceção.
+    // Lista bicicletas associadas a um totem
+    public List<BicicletaResponseDTO> listarBicicletasDoTotem(Long idTotem) {
+        // Busca o totem pelo ID. Se não encontrar, lança uma exceção.
         Totem totem = totemRepository.findById(idTotem)
                 .orElseThrow(() -> new EntityNotFoundException("Totem não encontrado com o id: " + idTotem));
 
-        // 2. Extrai a lista de números de bicicleta das trancas.
+        // Extrai a lista de números de bicicleta das trancas.
         List<Integer> numerosDasBicicletas = totem.getTrancas()
                 .stream()
                 .map(Tranca::getBicicleta) // Pega o número da bicicleta de cada tranca
                 .filter(Objects::nonNull)        // Ignora trancas que não têm uma bicicleta associada
                 .collect(Collectors.toList());
 
-        // 3. Para cada número, busca a entidade Bicicleta no banco de dados.
+        // Para cada número, busca a entidade Bicicleta no banco de dados.
         List<Bicicleta> bicicletasEncontradas = numerosDasBicicletas.stream()
                 .map(numero -> bicicletaRepository.findByNumero(numero)) // Busca cada bicicleta
                 .filter(Optional::isPresent)  // Filtra os resultados para manter apenas as que foram encontradas
                 .map(Optional::get)           // Extrai o objeto Bicicleta do Optional
                 .collect(Collectors.toList());
 
-        // 4. Converte a lista de entidades Bicicleta para uma lista de DTOs para a resposta.
+        // Converte a lista de entidades Bicicleta para uma lista de DTOs para a resposta.
         return bicicletasEncontradas.stream()
                 .map(BicicletaMapper::toDTO)
                 .collect(Collectors.toList());

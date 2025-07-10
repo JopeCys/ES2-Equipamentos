@@ -2,7 +2,9 @@ package scb.microsservico.equipamentos.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+
 import lombok.Data;
+
 import java.util.List;
 
 @Data // Gera getters, setters e outros métodos automaticamente
@@ -12,13 +14,13 @@ public class Totem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Localização é obrigatória")
+    @NotBlank
     private String localizacao;
 
-    @NotBlank(message = "Descrição é obrigatória")
+    @NotBlank
     private String descricao;
     
-    @OneToMany
+    @OneToMany // Relacionamento um-para-muitos com Tranca
     @JoinColumn(name = "idTotem")
     private List<Tranca> trancas;
 }

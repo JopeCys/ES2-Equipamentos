@@ -10,7 +10,7 @@ public class BicicletaNotFoundExceptionTest {
     @Test
     void testExceptionMessage() {
         BicicletaNotFoundException exception = new BicicletaNotFoundException();
-        assertEquals("Error: 404. Bicicleta não foi encontrada!", exception.getMessage());
+        assertEquals("Bicicleta não foi encontrada!", exception.getMessage());
     }
 
     @Test

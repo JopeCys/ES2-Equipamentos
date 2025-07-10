@@ -22,7 +22,6 @@ public class TrancaMapper {
     public static Tranca toEntity(TrancaCreateDTO dto) {
         Tranca tranca = new Tranca();
         tranca.setNumero(dto.getNumero());
-        tranca.setLocalizacao(dto.getLocalizacao());
         tranca.setAnoDeFabricacao(dto.getAnoDeFabricacao());
         tranca.setModelo(dto.getModelo());
         return tranca;

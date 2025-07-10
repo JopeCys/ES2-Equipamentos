@@ -2,155 +2,187 @@ package scb.microsservico.equipamentos.Tranca;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import scb.microsservico.equipamentos.controller.TrancaController;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Tranca.*;
-import scb.microsservico.equipamentos.enums.BicicletaStatus;
+import scb.microsservico.equipamentos.enums.AcaoRetirar;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.service.TrancaService;
 
 import java.util.Collections;
-import java.util.List;
 
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+
+@WebMvcTest(TrancaController.class)
 class TrancaControllerTest {
 
-    // Objeto para simular as requisições HTTP. Será inicializado manualmente.
+    @Autowired
     private MockMvc mockMvc;
 
-    // Mock da camada de serviço. Usamos o Mockito diretamente.
+    @MockitoBean
     private TrancaService trancaService;
-    
-    // Objeto para converter DTOs em JSON. Inicializado manualmente.
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private TrancaCreateDTO trancaCreateDTO;
     private TrancaResponseDTO trancaResponseDTO;
-    private BicicletaResponseDTO bicicletaResponseDTO;
+    private TrancaUpdateDTO trancaUpdateDTO;
 
     @BeforeEach
     void setUp() {
-        // 1. Criamos o mock do serviço usando Mockito.
-        trancaService = Mockito.mock(TrancaService.class);
-        
-        // 2. Instanciamos o controller manualmente, injetando o mock do serviço no construtor.
-        //    Isso funciona por causa da anotação @RequiredArgsConstructor no controller.
-        TrancaController trancaController = new TrancaController(trancaService);
+        trancaCreateDTO = new TrancaCreateDTO();
+        trancaCreateDTO.setNumero(100);
+        trancaCreateDTO.setModelo("Modelo Teste");
+        trancaCreateDTO.setAnoDeFabricacao("2023");
 
-        // 3. Construímos o MockMvc no modo standalone, passando a instância do nosso controller.
-        //    Isso cria um ambiente de teste mínimo apenas para este controller.
-        mockMvc = MockMvcBuilders.standaloneSetup(trancaController).build();
-
-        // Configuração dos DTOs de resposta para os testes (igual ao exemplo anterior)
         trancaResponseDTO = new TrancaResponseDTO();
         trancaResponseDTO.setId(1L);
-        trancaResponseDTO.setNumero(10);
-        trancaResponseDTO.setModelo("Modelo Forte");
+        trancaResponseDTO.setNumero(100);
+        trancaResponseDTO.setModelo("Modelo Teste");
         trancaResponseDTO.setAnoDeFabricacao("2023");
         trancaResponseDTO.setStatus(TrancaStatus.LIVRE);
 
-        bicicletaResponseDTO = new BicicletaResponseDTO();
-        bicicletaResponseDTO.setId(100L);
-        bicicletaResponseDTO.setMarca("Caloi");
-        bicicletaResponseDTO.setModelo("Caloi 10");
-        bicicletaResponseDTO.setStatus(BicicletaStatus.DISPONIVEL);
+        trancaUpdateDTO = new TrancaUpdateDTO();
+        trancaUpdateDTO.setModelo("Modelo Atualizado");
+        trancaUpdateDTO.setAnoDeFabricacao("2024");
     }
-    
+
     @Test
-    @DisplayName("Deve criar uma tranca com sucesso")
-    void criarTranca_ComDadosValidos_DeveRetornarAccepted() throws Exception {
-        // ARRANGE
-        TrancaCreateDTO createDTO = new TrancaCreateDTO();
-        createDTO.setNumero(10);
-        createDTO.setModelo("Modelo Forte");
-        createDTO.setAnoDeFabricacao("2023");
+    void testCriarTranca() throws Exception {
         doNothing().when(trancaService).criarTranca(any(TrancaCreateDTO.class));
-        
-        // ACT & ASSERT
+
         mockMvc.perform(post("/tranca")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(createDTO)))
-                .andExpect(status().isAccepted())
-                .andExpect(content().string("Dados Cadastrados"));
+                        .content(objectMapper.writeValueAsString(trancaCreateDTO)))
+                .andExpect(status().isAccepted());
     }
 
     @Test
-    @DisplayName("Deve buscar uma tranca por ID e retorná-la")
-    void buscarTrancaPorId_QuandoEncontrada_DeveRetornarTrancaResponseDTO() throws Exception {
-        // ARRANGE
-        Long idTranca = 1L;
-        when(trancaService.buscarTrancaPorId(idTranca)).thenReturn(trancaResponseDTO);
+    void testBuscarTrancaPorId() throws Exception {
+        when(trancaService.buscarTrancaPorId(1L)).thenReturn(trancaResponseDTO);
 
-        // ACT & ASSERT
-        mockMvc.perform(get("/tranca/{idTranca}", idTranca))
+        mockMvc.perform(get("/tranca/1"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(1)))
-                .andExpect(jsonPath("$.modelo", is("Modelo Forte")));
+                .andExpect(jsonPath("$.id").value(1L))
+                .andExpect(jsonPath("$.modelo").value("Modelo Teste"));
     }
 
     @Test
-    @DisplayName("Deve buscar todas as trancas e retornar uma lista")
-    void buscarTodasTrancas_DeveRetornarListaDeTrancas() throws Exception {
-        // ARRANGE
-        List<TrancaResponseDTO> trancas = Collections.singletonList(trancaResponseDTO);
-        when(trancaService.buscarTodasTrancas()).thenReturn(trancas);
+    void testBuscarTodasTrancas() throws Exception {
+        when(trancaService.buscarTodasTrancas()).thenReturn(Collections.singletonList(trancaResponseDTO));
 
-        // ACT & ASSERT
         mockMvc.perform(get("/tranca"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].id", is(1)));
+                .andExpect(jsonPath("$[0].id").value(1L));
     }
 
-    // ... todos os outros testes permanecem exatamente iguais ...
-
     @Test
-    @DisplayName("Deve atualizar uma tranca com sucesso")
-    void atualizarTranca_ComDadosValidos_DeveRetornarTrancaAtualizada() throws Exception {
-        // ARRANGE
-        Long idTranca = 1L;
-        TrancaUpdateDTO updateDTO = new TrancaUpdateDTO();
-        updateDTO.setModelo("Modelo Atualizado");
-        
-        TrancaResponseDTO trancaAtualizada = new TrancaResponseDTO();
-        trancaAtualizada.setId(idTranca);
-        trancaAtualizada.setModelo("Modelo Atualizado");
-        trancaAtualizada.setStatus(TrancaStatus.LIVRE);
+    void testAtualizarTranca() throws Exception {
+        when(trancaService.atualizarTranca(eq(1L), any(TrancaUpdateDTO.class))).thenReturn(trancaResponseDTO);
 
-        when(trancaService.atualizarTranca(eq(idTranca), any(TrancaUpdateDTO.class))).thenReturn(trancaAtualizada);
-
-        // ACT & ASSERT
-        mockMvc.perform(put("/tranca/{idTranca}", idTranca)
+        mockMvc.perform(put("/tranca/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(updateDTO)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.modelo", is("Modelo Atualizado")));
+                        .content(objectMapper.writeValueAsString(trancaUpdateDTO)))
+                .andExpect(status().isOk());
     }
 
     @Test
-    @DisplayName("Deve deletar uma tranca com sucesso")
-    void deletarTranca_DeveRetornarAccepted() throws Exception {
-        // ARRANGE
-        Long idTranca = 1L;
-        doNothing().when(trancaService).deletarTranca(idTranca);
-        
-        // ACT & ASSERT
-        mockMvc.perform(delete("/tranca/{idTranca}", idTranca))
-                .andExpect(status().isAccepted())
-                .andExpect(content().string("Tranca Deletada"));
+    void testDeletarTranca() throws Exception {
+        doNothing().when(trancaService).deletarTranca(1L);
+
+        mockMvc.perform(delete("/tranca/1"))
+                .andExpect(status().isAccepted());
+    }
+
+    @Test
+    void testBuscarBicicletaNaTranca() throws Exception {
+        BicicletaResponseDTO bicicletaResponseDTO = new BicicletaResponseDTO();
+        bicicletaResponseDTO.setId(5L);
+
+        when(trancaService.buscarBicicletaNaTranca(1L)).thenReturn(bicicletaResponseDTO);
+
+        mockMvc.perform(get("/tranca/1/bicicleta"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(5L));
+    }
+
+    @Test
+    void testTrancarTranca() throws Exception {
+        TrancarRequestDTO trancarRequestDTO = new TrancarRequestDTO();
+        trancarRequestDTO.setIdBicicleta(5L);
+
+        doNothing().when(trancaService).trancarTranca(eq(1L), any(TrancarRequestDTO.class));
+
+        mockMvc.perform(post("/tranca/1/trancar")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(trancarRequestDTO)))
+                .andExpect(status().isAccepted());
+    }
+
+    @Test
+    void testDestrancarTranca() throws Exception {
+        DestrancarRequestDTO destrancarRequestDTO = new DestrancarRequestDTO();
+        destrancarRequestDTO.setIdBicicleta(5L);
+
+        doNothing().when(trancaService).destrancarTranca(eq(1L), any(DestrancarRequestDTO.class));
+
+        mockMvc.perform(post("/tranca/1/destrancar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(destrancarRequestDTO)))
+                .andExpect(status().isAccepted());
+    }
+
+    @Test
+    void testAlterarStatusTranca() throws Exception {
+        doNothing().when(trancaService).alterarStatus(1L, TrancaStatus.EM_REPARO);
+        when(trancaService.buscarTrancaPorId(1L)).thenReturn(trancaResponseDTO);
+
+
+        mockMvc.perform(post("/tranca/1/status/EM_REPARO"))
+                .andExpect(status().isOk());
+
+        verify(trancaService, times(1)).alterarStatus(1L, TrancaStatus.EM_REPARO);
+    }
+
+    @Test
+    void testIntegrarNaRede() throws Exception {
+        IntegrarTrancaDTO integrarTrancaDTO = new IntegrarTrancaDTO();
+        integrarTrancaDTO.setIdTranca(1L);
+        integrarTrancaDTO.setIdTotem(10L);
+        integrarTrancaDTO.setIdFuncionario(100L);
+
+        doNothing().when(trancaService).integrarNaRede(any(IntegrarTrancaDTO.class));
+
+        mockMvc.perform(post("/tranca/integrarNaRede")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(integrarTrancaDTO)))
+                .andExpect(status().isAccepted());
+    }
+
+    @Test
+    void testRetirarDaRede() throws Exception {
+        RetirarTrancaDTO retirarTrancaDTO = new RetirarTrancaDTO();
+        retirarTrancaDTO.setIdTranca(1L);
+        retirarTrancaDTO.setIdTotem(10L);
+        retirarTrancaDTO.setIdFuncionario(100L);
+        retirarTrancaDTO.setAcao(AcaoRetirar.APOSENTADORIA);
+
+        doNothing().when(trancaService).retirarDaRede(any(RetirarTrancaDTO.class));
+
+        mockMvc.perform(post("/tranca/retirarDaRede")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(retirarTrancaDTO)))
+                .andExpect(status().isAccepted());
     }
 }
