@@ -11,7 +11,7 @@ class TrancaOcupadaExceptionTest {
     @Test
     void testExceptionMessage() {
         TrancaOcupadaException exception = new TrancaOcupadaException();
-        assertEquals("Error: 409. Não é possível deletar uma tranca OCUPADA!", exception.getMessage());
+        assertEquals("Não é possível deletar uma tranca OCUPADA!", exception.getMessage());
     }
 
     @Test

@@ -11,7 +11,7 @@ class TrancaNotFoundExceptionTest {
     @Test
     void testExceptionMessage() {
         TrancaNotFoundException exception = new TrancaNotFoundException();
-        assertEquals("Error: 404. Tranca não foi encontrada!", exception.getMessage());
+        assertEquals("Tranca não foi encontrada!", exception.getMessage());
     }
 
     @Test
