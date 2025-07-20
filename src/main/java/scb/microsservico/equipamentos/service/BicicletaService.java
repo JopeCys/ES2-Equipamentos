@@ -18,6 +18,8 @@ import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaUpdateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.IntegrarBicicletaDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.RetirarBicicletaDTO;
+import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
+import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.dto.Tranca.DestrancarRequestDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancarRequestDTO;
 import scb.microsservico.equipamentos.enums.AcaoRetirar;
@@ -29,7 +31,9 @@ import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
 import scb.microsservico.equipamentos.mapper.BicicletaMapper;
 import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Tranca;
+import scb.microsservico.equipamentos.model.RegistroOperacao;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
+import scb.microsservico.equipamentos.repository.RegistroOperacaoRepository;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
 
 @Service // Indica que é um serviço do Spring
@@ -38,7 +42,8 @@ public class BicicletaService {
     
     // Repositórios para acesso ao banco
     private final BicicletaRepository bicicletaRepository; 
-    private final TrancaRepository trancaRepository; 
+    private final TrancaRepository trancaRepository;
+    private final RegistroOperacaoRepository registroOperacaoRepository; 
     
     // Serviços auxiliares
     private final TrancaService trancaService;
@@ -101,11 +106,11 @@ public class BicicletaService {
     }
 
     // Altera o status de uma bicicleta
-    public void alterarStatus(Long idBicicleta, BicicletaStatus novoStatus) {
+    public void alterarStatus(Long idBicicleta, BicicletaStatus acao) {
         Bicicleta bicicleta = bicicletaRepository.findById(idBicicleta)
                 .orElseThrow(BicicletaNotFoundException::new);
 
-        bicicleta.setStatus(novoStatus);
+        bicicleta.setStatus(acao);
 
         bicicletaRepository.save(bicicleta);
     }
@@ -126,12 +131,6 @@ public class BicicletaService {
         if (tranca.getStatus() != TrancaStatus.LIVRE) {
             throw new IllegalStateException("A tranca deve estar com o status 'LIVRE'.");
         }
-
-        // Simula o processo de registro de integração
-        System.out.println("LOG: Registrando inclusão - Data/Hora: " + java.time.LocalDateTime.now() +
-                           ", Número da Bicicleta: " + bicicleta.getNumero() +
-                           ", Número da Tranca: " + tranca.getNumero());
-
         
         // Fecha tranca
         TrancarRequestDTO trancarRequestDTO = new TrancarRequestDTO();
@@ -141,19 +140,35 @@ public class BicicletaService {
         // Altera o status da bicicleta para "disponível"
         bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
         bicicletaRepository.save(bicicleta);
-
-        // Simulação de envio de email para o reparador
+        
+        // Registra a operação de integração
+        RegistroOperacao registro = new RegistroOperacao();
+        registro.setTipo("INTEGRACAO");
+        registro.setDescricao(String.format(
+            "Bicicleta %d integrada na tranca %d pelo funcionário %d.",
+            bicicleta.getNumero(), tranca.getNumero(), dto.getIdFuncionario()
+        ));
+        registro.setDataHora(java.time.LocalDateTime.now());
+        registro.setIdFuncionario(dto.getIdFuncionario());
+        registroOperacaoRepository.save(registro);
+        
+        // Envio de e-mail para o funcionário
         try {
-            String emailFuncionario = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
+            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
             String assunto = "Bicicleta integrada ao sistema";
-            String corpo = String.format("A bicicleta de número %d foi incluída na tranca de número %d.",
-                                         bicicleta.getNumero(), tranca.getNumero());
-            externoServiceClient.enviarEmail(emailFuncionario, assunto, corpo);
+            String mensagem = String.format("A bicicleta de número %d foi incluída na tranca de número %d.",
+            bicicleta.getNumero(), tranca.getNumero());
+            
+            EmailRequestDTO emailRequest = new EmailRequestDTO();
+            emailRequest.setEmail(emailDTO.getEmail());
+            emailRequest.setAssunto(assunto);
+            emailRequest.setMensagem(mensagem);
+            externoServiceClient.enviarEmail(emailRequest);
         } catch (Exception e) {
             System.err.println("ERRO: Não foi possível enviar o e-mail de notificação da integração: " + e.getMessage());
         }
     }
-
+    
     @Transactional
     public void retirarBicicletaDaRede(RetirarBicicletaDTO dto) {
         Bicicleta bicicleta = bicicletaRepository.findById(dto.getIdBicicleta())
@@ -166,9 +181,6 @@ public class BicicletaService {
         if (bicicleta.getStatus() == BicicletaStatus.DISPONIVEL || tranca.getStatus() == TrancaStatus.LIVRE) {
             throw new IllegalStateException("A bicicleta já está disponível ou a tranca já está livre.");
         }
-
-        // Simula o processo de solicitação de retirada
-        System.out.println("LOG: Retirada solicitada para bicicleta: " + bicicleta.getNumero() + " na tranca: " + tranca.getNumero());
 
         // Abre tranca
         DestrancarRequestDTO destrancarRequestDTO = new DestrancarRequestDTO();
@@ -183,18 +195,29 @@ public class BicicletaService {
         }
         bicicletaRepository.save(bicicleta);
         
-        // Simula o processo de registro de integração
-        System.out.println("LOG: Registro de Retirada - Data/Hora: " + java.time.LocalDateTime.now() +
-                ", Reparador: " + dto.getIdFuncionario() +
-                ", Número da Bicicleta: " + bicicleta.getNumero());
-
-        // Simulação de envio de email para o reparador
+        // Registra a operação de retirada
+        RegistroOperacao registro = new RegistroOperacao();
+        registro.setTipo("RETIRADA");
+        registro.setDescricao(String.format(
+            "Bicicleta %d retirada da tranca %d pelo funcionário %d.",
+            bicicleta.getNumero(), tranca.getNumero(), dto.getIdFuncionario()
+        ));
+        registro.setDataHora(java.time.LocalDateTime.now());
+        registro.setIdFuncionario(dto.getIdFuncionario());
+        registroOperacaoRepository.save(registro);
+        
+        // Envio de e-mail para o funcionário
         try {
-            String emailReparador = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
-            String assunto = "Notificação de Retirada de Bicicleta";
-            String corpo = String.format("A bicicleta de número %d foi retirada da tranca %d para %s.",
-                    bicicleta.getNumero(), tranca.getNumero(), dto.getAcao().toString().toLowerCase());
-            externoServiceClient.enviarEmail(emailReparador, assunto, corpo);
+            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
+            String assunto = "Bicicleta retirada do sistema";
+            String mensagem = String.format("A bicicleta de número %d foi retirada da tranca de número %d.",
+            bicicleta.getNumero(), tranca.getNumero());
+            
+            EmailRequestDTO emailRequest = new EmailRequestDTO();
+            emailRequest.setEmail(emailDTO.getEmail());
+            emailRequest.setAssunto(assunto);
+            emailRequest.setMensagem(mensagem);
+            externoServiceClient.enviarEmail(emailRequest);
         } catch (Exception e) {
             System.err.println("ERRO: Não foi possível enviar o e-mail de notificação da retirada: " + e.getMessage());
         }

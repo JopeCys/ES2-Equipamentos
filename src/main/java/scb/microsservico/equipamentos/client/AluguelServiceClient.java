@@ -1,18 +1,15 @@
 // scb-equipamentos/src/main/java/scb/microsservico/equipamentos/client/RentalServiceClient.java
 package scb.microsservico.equipamentos.client;
 
-import org.springframework.stereotype.Component;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
-// Esta é uma interface de placeholder. Em uma aplicação real,
-// seria uma interface FeignClient ou um componente que usa RestTemplate.
-@Component
-public class AluguelServiceClient {
+import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 
-    public String getEmailFuncionario(Long idFuncionario) {
-        // Lógica para buscar o e-mail do funcionário no microsserviço aluguel
-        // Em um ambiente real:
-        // Ex: return feignClient.getEmployeeDetails(employeeId).getEmail();
-        System.out.println("DEBUG: Buscando e-mail para o funcionário com ID: " + idFuncionario);
-        return "funcionario" + idFuncionario + "@email.com"; // Exemplo de retorno
-    }
+@FeignClient(name = "scb-aluguel", url = "${scb-aluguel.url}")
+public interface AluguelServiceClient {
+
+    @GetMapping("/funcionario/{idFuncionario}")
+    FuncionarioEmailDTO getEmailFuncionario(@PathVariable("idFuncionario") Long idFuncionario);
 }

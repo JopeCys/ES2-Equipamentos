@@ -13,6 +13,8 @@ import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaUpdateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.IntegrarBicicletaDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.RetirarBicicletaDTO;
+import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
+import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.dto.Tranca.DestrancarRequestDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancarRequestDTO;
 import scb.microsservico.equipamentos.enums.AcaoRetirar;
@@ -24,6 +26,7 @@ import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
+import scb.microsservico.equipamentos.repository.RegistroOperacaoRepository;
 import scb.microsservico.equipamentos.service.BicicletaService;
 import scb.microsservico.equipamentos.service.TrancaService;
 
@@ -49,6 +52,8 @@ class BicicletaServiceTest {
     private AluguelServiceClient aluguelServiceClient;
     @Mock
     private ExternoServiceClient externoServiceClient;
+    @Mock
+    private RegistroOperacaoRepository registroOperacaoRepository;
 
     @InjectMocks
     private BicicletaService bicicletaService;
@@ -120,6 +125,8 @@ class BicicletaServiceTest {
     void atualizarBicicleta_QuandoEncontrada_DeveAtualizarEretornarDTO() {
         BicicletaUpdateDTO updateDTO = new BicicletaUpdateDTO();
         updateDTO.setMarca("Monark");
+        updateDTO.setModelo("Mountain");
+        updateDTO.setAno("2022");
 
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(bicicletaRepository.save(any(Bicicleta.class))).thenReturn(bicicleta);
@@ -127,6 +134,8 @@ class BicicletaServiceTest {
         BicicletaResponseDTO result = bicicletaService.atualizarBicicleta(1L, updateDTO);
 
         assertEquals("Monark", result.getMarca());
+        assertEquals("Mountain", result.getModelo());
+        assertEquals("2022", result.getAno());
         verify(bicicletaRepository, times(1)).save(bicicleta);
     }
 
@@ -168,16 +177,19 @@ class BicicletaServiceTest {
         integrarDTO.setIdTranca(1L);
         integrarDTO.setIdFuncionario(1L);
 
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail("teste@email.com");
+
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("teste@email.com");
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         bicicletaService.integrarBicicletaNaRede(integrarDTO);
 
         verify(trancaService, times(1)).trancarTranca(eq(1L), any(TrancarRequestDTO.class));
         assertEquals(BicicletaStatus.DISPONIVEL, bicicleta.getStatus());
         verify(bicicletaRepository, times(1)).save(bicicleta);
-        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
+        verify(externoServiceClient, times(1)).enviarEmail(any(scb.microsservico.equipamentos.dto.Client.EmailRequestDTO.class));
     }
 
     @Test
@@ -205,19 +217,21 @@ class BicicletaServiceTest {
         retirarDTO.setIdFuncionario(1L);
         retirarDTO.setAcao(AcaoRetirar.REPARO);
 
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail("teste@email.com");
+
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("teste@email.com");
-
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         bicicletaService.retirarBicicletaDaRede(retirarDTO);
 
         verify(trancaService, times(1)).destrancarTranca(eq(1L), any(DestrancarRequestDTO.class));
         assertEquals(BicicletaStatus.EM_REPARO, bicicleta.getStatus());
         verify(bicicletaRepository, times(1)).save(bicicleta);
-        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
+        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
     }
-    
+
     @Test
     void retirarBicicletaDaRede_ComDadosValidosParaAposentadoria_DeveRetirarComSucesso() {
         bicicleta.setStatus(BicicletaStatus.EM_USO);
@@ -228,17 +242,19 @@ class BicicletaServiceTest {
         retirarDTO.setIdFuncionario(1L);
         retirarDTO.setAcao(AcaoRetirar.APOSENTADORIA);
 
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail("teste@email.com");
+
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("teste@email.com");
-
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         bicicletaService.retirarBicicletaDaRede(retirarDTO);
 
         verify(trancaService, times(1)).destrancarTranca(eq(1L), any(DestrancarRequestDTO.class));
         assertEquals(BicicletaStatus.APOSENTADA, bicicleta.getStatus());
         verify(bicicletaRepository, times(1)).save(bicicleta);
-        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
+        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
     }
 
     @Test

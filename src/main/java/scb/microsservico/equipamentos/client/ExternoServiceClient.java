@@ -1,19 +1,15 @@
 // scb-equipamentos/src/main/java/scb/microsservico/equipamentos/client/ExternalServiceClient.java
 package scb.microsservico.equipamentos.client;
 
-import org.springframework.stereotype.Component;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
-// Esta é uma interface de placeholder. Em uma aplicação real,
-// seria uma interface FeignClient ou um componente que usa RestTemplate.
-@Component
-public class ExternoServiceClient {
+import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
 
-    public void enviarEmail(String emailIntegracao, String assunto, String corpo) {
-        // Lógica para enviar e-mail para o microsserviço externo
-        // Em um ambiente real:
-        // Ex: feignClient.sendEmail(emailRequest);
-        System.out.println("DEBUG: Enviando e-mail de integração para: " + emailIntegracao);
-        System.out.println("DEBUG: Assunto: " + assunto);
-        System.out.println("DEBUG: Corpo: " + corpo);
-    }
+@FeignClient(name = "scb-externo", url = "${scb-externo.url}")
+public interface ExternoServiceClient {
+
+    @PostMapping("/enviarEmail")
+    void enviarEmail(@RequestBody EmailRequestDTO request);
 }

@@ -18,14 +18,18 @@ import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaLivreException;
 import scb.microsservico.equipamentos.mapper.TrancaMapper;
 import scb.microsservico.equipamentos.model.Bicicleta;
+import scb.microsservico.equipamentos.model.RegistroOperacao;
 import scb.microsservico.equipamentos.model.Totem;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
+import scb.microsservico.equipamentos.repository.RegistroOperacaoRepository;
 import scb.microsservico.equipamentos.repository.TotemRepository;
 import scb.microsservico.equipamentos.client.AluguelServiceClient;
 import scb.microsservico.equipamentos.client.ExternoServiceClient;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
+import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
+import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.mapper.BicicletaMapper;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
 import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
@@ -46,6 +50,7 @@ public class TrancaService {
     private final TrancaRepository trancaRepository; 
     private final BicicletaRepository bicicletaRepository; 
     private final TotemRepository totemRepository;
+    private final RegistroOperacaoRepository registroOperacaoRepository;
     
     // Serviços auxiliares
     private final ExternoServiceClient externoServiceClient; 
@@ -168,11 +173,11 @@ public class TrancaService {
     }
 
     // Altera o status de uma tranca
-    public void alterarStatus(Long idTranca, TrancaStatus novoStatus) {
+    public void alterarStatus(Long idTranca, TrancaStatus acao) {
         Tranca tranca = trancaRepository.findById(idTranca)
                 .orElseThrow(TrancaNotFoundException::new);
 
-        tranca.setStatus(novoStatus);
+        tranca.setStatus(acao);
 
         trancaRepository.save(tranca);
     }
@@ -202,27 +207,37 @@ public class TrancaService {
         tranca.setStatus(TrancaStatus.LIVRE);
         // Define a localização da tranca pela localização do totem
         tranca.setLocalizacao(totem.getLocalizacao());
-
-        // Simula o processo de registro de integração
-        System.out.println("LOG: Tranca " + tranca.getId() + " integrada ao totem " + totem.getId() + " em " + java.time.LocalDateTime.now() +
-                           "LOG: Matrícula do reparador: " + dto.getIdFuncionario() +
-                           "LOG: Número da tranca: " + tranca.getNumero());
-
-
-        // Simulação de envio de email para o reparador
-        try {
-            String emailIntegracao = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
-            String assunto = "Integração de Tranca Realizada";
-            String corpo = String.format("A tranca %d (Número: %d) foi integrada com sucesso ao totem %d na localização '%s' pelo funcionário %d.",
-                tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
-            externoServiceClient.enviarEmail(emailIntegracao, assunto, corpo);
-        } catch (Exception e) {
-            System.err.println("ERRO: Não foi possível enviar o e-mail de integração: " + e.getMessage());
-        }
-
+        
         // Salva as alterações em ambas as entidades
         totemRepository.save(totem);
         trancaRepository.save(tranca);
+        
+        // Registro real da operação
+        RegistroOperacao registro = new RegistroOperacao();
+        registro.setTipo("INTEGRACAO");
+        registro.setDescricao(String.format(
+            "Tranca %d (Número: %d) integrada ao totem %d na localização '%s' pelo funcionário %d.",
+            tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario()
+        ));
+        registro.setDataHora(java.time.LocalDateTime.now());
+        registro.setIdFuncionario(dto.getIdFuncionario());
+        registroOperacaoRepository.save(registro);
+
+        // Envio de email para o reparador
+        try {
+            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
+            String assunto = "Integração de Tranca Realizada";
+            String mensagem = String.format("A tranca %d (Número: %d) foi integrada com sucesso ao totem %d na localização '%s' pelo funcionário %d.",
+                tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
+            
+            EmailRequestDTO emailRequest = new EmailRequestDTO();
+            emailRequest.setEmail(emailDTO.getEmail());
+            emailRequest.setAssunto(assunto);
+            emailRequest.setMensagem(mensagem);
+            externoServiceClient.enviarEmail(emailRequest);
+        } catch (Exception e) {
+            System.err.println("ERRO: Não foi possível enviar o e-mail de integração: " + e.getMessage());
+        }
     }
 
     // Retira uma bicicleta da rede, deassociando-a a uma tranca
@@ -249,28 +264,36 @@ public class TrancaService {
         } else if (dto.getAcao() == AcaoRetirar.APOSENTADORIA) {
             tranca.setStatus(TrancaStatus.APOSENTADA);
         }
-
-        // Simula o processo de registro de retirada
-        System.out.printf("LOG: Retirada da tranca %d. Ação: %s. Data/Hora: %s. Reparador: %d.%n",
-            tranca.getNumero(),
-            dto.getAcao().toString(),
-            java.time.LocalDateTime.now(),
-            dto.getIdFuncionario());
-
-        // Simulação de envio de email para o reparador
-        try {
-            String emailReparador = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
-            String assunto = "Notificação de Retirada de Tranca do Totem";
-            String corpo = String.format("A tranca de número %d foi retirada do totem %d (Local: %s) para %s pelo funcionário de ID %d.",
-                tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getAcao().toString().toLowerCase(), dto.getIdFuncionario());
-            
-            externoServiceClient.enviarEmail(emailReparador, assunto, corpo);
-        } catch (Exception e) {
-            System.err.println("ERRO: Não foi possível enviar o e-mail de notificação da retirada: " + e.getMessage());
-        }
         
         // Salva as alterações no banco de dados
         totemRepository.save(totem);
         trancaRepository.save(tranca);
+        
+        // Registro real da operação
+        RegistroOperacao registro = new RegistroOperacao();
+        registro.setTipo("RETIRADA");
+        registro.setDescricao(String.format(
+            "Tranca %d (Número: %d) retirada do totem %d na localização '%s' pelo funcionário %d. Ação: %s.",
+            tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario(), dto.getAcao()
+        ));
+        registro.setDataHora(java.time.LocalDateTime.now());
+        registro.setIdFuncionario(dto.getIdFuncionario());
+        registroOperacaoRepository.save(registro);
+
+        // Envio de email para o reparador
+        try {
+            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
+            String assunto = "Retirada de Tranca Realizada";
+            String mensagem = String.format("A tranca %d (Número: %d) foi retirada do totem %d na localização '%s' pelo funcionário %d.",
+                tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
+            
+            EmailRequestDTO emailRequest = new EmailRequestDTO();
+            emailRequest.setEmail(emailDTO.getEmail());
+            emailRequest.setAssunto(assunto);
+            emailRequest.setMensagem(mensagem);
+            externoServiceClient.enviarEmail(emailRequest);
+        } catch (Exception e) {
+            System.err.println("ERRO: Não foi possível enviar o e-mail de notificação da retirada: " + e.getMessage());
+        }
     }
 }

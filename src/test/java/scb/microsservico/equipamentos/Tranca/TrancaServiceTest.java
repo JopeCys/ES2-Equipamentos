@@ -8,6 +8,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import scb.microsservico.equipamentos.client.AluguelServiceClient;
 import scb.microsservico.equipamentos.client.ExternoServiceClient;
+import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
+import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.dto.Tranca.*;
 import scb.microsservico.equipamentos.enums.AcaoRetirar;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
@@ -16,6 +18,7 @@ import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Totem;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
+import scb.microsservico.equipamentos.repository.RegistroOperacaoRepository;
 import scb.microsservico.equipamentos.repository.TotemRepository;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
 import scb.microsservico.equipamentos.service.TrancaService;
@@ -39,6 +42,8 @@ class TrancaServiceTest {
     private ExternoServiceClient externoServiceClient;
     @Mock
     private AluguelServiceClient aluguelServiceClient;
+    @Mock
+    private RegistroOperacaoRepository registroOperacaoRepository;
 
     @InjectMocks
     private TrancaService trancaService;
@@ -87,9 +92,11 @@ class TrancaServiceTest {
     void atualizarTranca_deveAtualizarDados() {
         TrancaUpdateDTO updateDTO = new TrancaUpdateDTO();
         updateDTO.setModelo("Novo Modelo");
+        updateDTO.setAnoDeFabricacao("2024");
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
         trancaService.atualizarTranca(1L, updateDTO);
         assertEquals("Novo Modelo", tranca.getModelo());
+        assertEquals("2024", tranca.getAnoDeFabricacao());
     }
 
     @Test
@@ -119,6 +126,7 @@ class TrancaServiceTest {
 
         assertEquals(TrancaStatus.OCUPADA, tranca.getStatus());
         assertEquals(bicicleta.getNumero(), tranca.getBicicleta());
+        assertEquals("DISPONIVEL", bicicleta.getStatus().name());
     }
 
     @Test
@@ -135,6 +143,8 @@ class TrancaServiceTest {
 
         assertEquals(TrancaStatus.LIVRE, tranca.getStatus());
         assertNull(tranca.getBicicleta());
+        assertEquals("EM_USO", bicicleta.getStatus().name());
+        assertNull(bicicleta.getLocalizacao());
     }
 
     @Test
@@ -145,14 +155,17 @@ class TrancaServiceTest {
         request.setIdTotem(totem.getId());
         request.setIdFuncionario(1L);
 
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail("reparador@email.com");
+
         when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
         when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("reparador@email.com");
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         trancaService.integrarNaRede(request);
 
         assertEquals(TrancaStatus.LIVRE, tranca.getStatus());
-        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
+        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
     }
 
     @Test
@@ -164,13 +177,16 @@ class TrancaServiceTest {
         request.setAcao(AcaoRetirar.REPARO);
         request.setIdFuncionario(1L);
 
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail("reparador@email.com");
+
         when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
         when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn("reparador@email.com");
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         trancaService.retirarDaRede(request);
 
         assertEquals(TrancaStatus.EM_REPARO, tranca.getStatus());
-        verify(externoServiceClient, times(1)).enviarEmail(anyString(), anyString(), anyString());
+        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
     }
 }
