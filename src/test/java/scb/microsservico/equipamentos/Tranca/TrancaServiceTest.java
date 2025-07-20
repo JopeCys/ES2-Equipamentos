@@ -189,4 +189,24 @@ class TrancaServiceTest {
         assertEquals(TrancaStatus.EM_REPARO, tranca.getStatus());
         verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
     }
+
+    @Test
+    void integrarNaRede_QuandoFalhaEnvioEmail_NaoLancaExcecao() {
+        tranca.setStatus(TrancaStatus.NOVA);
+        IntegrarTrancaDTO request = new IntegrarTrancaDTO();
+        request.setIdTranca(tranca.getId());
+        request.setIdTotem(totem.getId());
+        request.setIdFuncionario(1L);
+
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail("reparador@email.com");
+
+        when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
+        when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
+        doThrow(new RuntimeException("Falha no envio")).when(externoServiceClient).enviarEmail(any(EmailRequestDTO.class));
+
+        assertDoesNotThrow(() -> trancaService.integrarNaRede(request));
+        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
+    }
 }

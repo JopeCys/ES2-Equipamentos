@@ -271,4 +271,23 @@ class BicicletaServiceTest {
             bicicletaService.retirarBicicletaDaRede(retirarDTO);
         });
     }
+
+    @Test
+    void integrarBicicletaNaRede_QuandoFalhaEnvioEmail_NaoLancaExcecao() {
+        IntegrarBicicletaDTO integrarDTO = new IntegrarBicicletaDTO();
+        integrarDTO.setIdBicicleta(1L);
+        integrarDTO.setIdTranca(1L);
+        integrarDTO.setIdFuncionario(1L);
+
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail("teste@email.com");
+
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
+        doThrow(new RuntimeException("Falha no envio")).when(externoServiceClient).enviarEmail(any(EmailRequestDTO.class));
+
+        assertDoesNotThrow(() -> bicicletaService.integrarBicicletaNaRede(integrarDTO));
+        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
+    }
 }
