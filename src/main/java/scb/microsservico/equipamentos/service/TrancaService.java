@@ -182,118 +182,106 @@ public class TrancaService {
         trancaRepository.save(tranca);
     }
 
-    // Integra uma bicicleta na rede, associando-a a uma tranca
+    private void registrarOperacao(String tipo, String descricao, Long idFuncionario) {
+        RegistroOperacao registro = new RegistroOperacao();
+        registro.setTipo(tipo);
+        registro.setDescricao(descricao);
+        registro.setDataHora(java.time.LocalDateTime.now());
+        registro.setIdFuncionario(idFuncionario);
+        registroOperacaoRepository.save(registro);
+    }
+
+    private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
+        try {
+            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
+            EmailRequestDTO emailRequest = new EmailRequestDTO();
+            emailRequest.setEmail(emailDTO.getEmail());
+            emailRequest.setAssunto(assunto);
+            emailRequest.setMensagem(mensagem);
+            externoServiceClient.enviarEmail(emailRequest);
+        } catch (Exception e) {
+            System.err.println("ERRO: Não foi possível enviar o e-mail de notificação: " + e.getMessage());
+        }
+    }
+
+    // Integra uma tranca na rede, associando-a a um totem
     @Transactional // Garante que todas as operações sejam atômicas
     public void integrarNaRede(IntegrarTrancaDTO dto) {
+        // Busca tranca e totem pelo ID
         Tranca tranca = trancaRepository.findById(dto.getIdTranca())
                 .orElseThrow(TrancaNotFoundException::new);
 
         Totem totem = totemRepository.findById(dto.getIdTotem())
                 .orElseThrow(TotemNotFoundException::new);
 
-        // Pré-condições
+        // Valida pré-condições de status
         if (tranca.getStatus() != TrancaStatus.NOVA && tranca.getStatus() != TrancaStatus.EM_REPARO) {
             throw new TrancaJaIntegradaException();
         }
 
-        // Adiciona a tranca à lista de trancas do totem
-        // Verifica se a lista de trancas do totem é nula e inicializa se for o caso
+        // Associa tranca ao totem e atualiza status/localização
         if (totem.getTrancas() == null) {
             totem.setTrancas(new java.util.ArrayList<>());
         }
         totem.getTrancas().add(tranca);
 
-        // Altera o status da tranca para LIVRE
         tranca.setStatus(TrancaStatus.LIVRE);
-        // Define a localização da tranca pela localização do totem
         tranca.setLocalizacao(totem.getLocalizacao());
-        
-        // Salva as alterações em ambas as entidades
+
         totemRepository.save(totem);
         trancaRepository.save(tranca);
-        
-        // Registro real da operação
-        RegistroOperacao registro = new RegistroOperacao();
-        registro.setTipo("INTEGRACAO");
-        registro.setDescricao(String.format(
+
+        // Registra operação e envia notificação
+        String descricao = String.format(
             "Tranca %d (Número: %d) integrada ao totem %d na localização '%s' pelo funcionário %d.",
             tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario()
-        ));
-        registro.setDataHora(java.time.LocalDateTime.now());
-        registro.setIdFuncionario(dto.getIdFuncionario());
-        registroOperacaoRepository.save(registro);
+        );
+        registrarOperacao("INTEGRACAO", descricao, dto.getIdFuncionario());
 
-        // Envio de email para o reparador
-        try {
-            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
-            String assunto = "Integração de Tranca Realizada";
-            String mensagem = String.format("A tranca %d (Número: %d) foi integrada com sucesso ao totem %d na localização '%s' pelo funcionário %d.",
-                tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
-            
-            EmailRequestDTO emailRequest = new EmailRequestDTO();
-            emailRequest.setEmail(emailDTO.getEmail());
-            emailRequest.setAssunto(assunto);
-            emailRequest.setMensagem(mensagem);
-            externoServiceClient.enviarEmail(emailRequest);
-        } catch (Exception e) {
-            System.err.println("ERRO: Não foi possível enviar o e-mail de integração: " + e.getMessage());
-        }
+        String assunto = "Integração de Tranca Realizada";
+        String mensagem = String.format("A tranca %d (Número: %d) foi integrada com sucesso ao totem %d na localização '%s' pelo funcionário %d.",
+            tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
+        enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
     }
 
-    // Retira uma bicicleta da rede, deassociando-a a uma tranca
+    // Retira uma tranca da rede, desassociando-a de um totem
     @Transactional // Garante que todas as operações sejam atômicas
     public void retirarDaRede(RetirarTrancaDTO dto) {
+        // Busca tranca e totem pelo ID
         Tranca tranca = trancaRepository.findById(dto.getIdTranca())
             .orElseThrow(TrancaNotFoundException::new);
 
         Totem totem = totemRepository.findById(dto.getIdTotem())
                 .orElseThrow(TotemNotFoundException::new);
 
-        // Pré-condições
+        // Remove tranca do totem e atualiza localização
         boolean foiRemovida = totem.getTrancas().removeIf(t -> t.getId().equals(tranca.getId()));
         if(!foiRemovida){
              throw new TrancaNaoIntegradaException(); 
         } else {
-            // Limpa localização da tranca
             tranca.setLocalizacao(null);
         }
 
-        // Define o status da tranca com base na ação
+        // Atualiza status da tranca conforme ação
         if (dto.getAcao() == AcaoRetirar.REPARO) {
             tranca.setStatus(TrancaStatus.EM_REPARO);
         } else if (dto.getAcao() == AcaoRetirar.APOSENTADORIA) {
             tranca.setStatus(TrancaStatus.APOSENTADA);
         }
-        
-        // Salva as alterações no banco de dados
+
         totemRepository.save(totem);
         trancaRepository.save(tranca);
-        
-        // Registro real da operação
-        RegistroOperacao registro = new RegistroOperacao();
-        registro.setTipo("RETIRADA");
-        registro.setDescricao(String.format(
+
+        // Registra operação e envia notificação
+        String descricao = String.format(
             "Tranca %d (Número: %d) retirada do totem %d na localização '%s' pelo funcionário %d. Ação: %s.",
             tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario(), dto.getAcao()
-        ));
-        registro.setDataHora(java.time.LocalDateTime.now());
-        registro.setIdFuncionario(dto.getIdFuncionario());
-        registroOperacaoRepository.save(registro);
+        );
+        registrarOperacao("RETIRADA", descricao, dto.getIdFuncionario());
 
-        // Envio de email para o reparador
-        try {
-            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(dto.getIdFuncionario());
-            String assunto = "Retirada de Tranca Realizada";
-            String mensagem = String.format("A tranca %d (Número: %d) foi retirada do totem %d na localização '%s' pelo funcionário %d.",
-                tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
-            
-            EmailRequestDTO emailRequest = new EmailRequestDTO();
-            emailRequest.setEmail(emailDTO.getEmail());
-            emailRequest.setAssunto(assunto);
-            emailRequest.setMensagem(mensagem);
-            externoServiceClient.enviarEmail(emailRequest);
-        } catch (Exception e) {
-            System.err.println("ERRO: Não foi possível enviar o e-mail de notificação da retirada: " + e.getMessage());
-        }
+        String assunto = "Retirada de Tranca Realizada";
+        String mensagem = String.format("A tranca %d (Número: %d) foi retirada do totem %d na localização '%s' pelo funcionário %d.",
+            tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
+        enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
     }
 }
