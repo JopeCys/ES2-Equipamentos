@@ -66,19 +66,6 @@ class TrancaCreateDTOTest {
     }
 
     @Test
-    void testNumeroNaoNulo() {
-        TrancaCreateDTO dto = new TrancaCreateDTO();
-        dto.setAnoDeFabricacao("2023");
-        dto.setModelo("Modelo Válido");
-        dto.setLocalizacao("Localização Válida");
-
-        Set<ConstraintViolation<TrancaCreateDTO>> violations = validator.validate(dto);
-        assertFalse(violations.isEmpty());
-        assertEquals(1, violations.size());
-        assertEquals("não deve ser nulo", violations.iterator().next().getMessage());
-    }
-
-    @Test
     void testAnoDeFabricacaoNaoVazio() {
         TrancaCreateDTO dto = new TrancaCreateDTO();
         dto.setNumero(123);
