@@ -157,7 +157,7 @@ public class BicicletaService {
         
         // Associa bicicleta à tranca e atualiza status
         TrancarRequestDTO trancarRequestDTO = new TrancarRequestDTO();
-        trancarRequestDTO.setIdBicicleta(bicicleta.getId());
+        trancarRequestDTO.setBicicleta(bicicleta.getId());
         trancaService.trancarTranca(tranca.getId(), trancarRequestDTO);
 
         bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
@@ -193,12 +193,12 @@ public class BicicletaService {
 
         // Desassocia bicicleta da tranca e atualiza status
         DestrancarRequestDTO destrancarRequestDTO = new DestrancarRequestDTO();
-        destrancarRequestDTO.setIdBicicleta(bicicleta.getId());
+        destrancarRequestDTO.setBicicleta(bicicleta.getId());
         trancaService.destrancarTranca(dto.getIdTranca(), destrancarRequestDTO);
 
-        if(dto.getAcao() == AcaoRetirar.REPARO) {
+        if(dto.getStatusAcaoReparador() == AcaoRetirar.REPARO) {
             bicicleta.setStatus(BicicletaStatus.EM_REPARO);
-        } else if (dto.getAcao() == AcaoRetirar.APOSENTADORIA) {
+        } else if (dto.getStatusAcaoReparador() == AcaoRetirar.APOSENTADORIA) {
             bicicleta.setStatus(BicicletaStatus.APOSENTADA);
         }
         bicicletaRepository.save(bicicleta);

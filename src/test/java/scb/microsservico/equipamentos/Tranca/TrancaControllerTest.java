@@ -120,7 +120,7 @@ class TrancaControllerTest {
     @Test
     void testTrancarTranca() throws Exception {
         TrancarRequestDTO trancarRequestDTO = new TrancarRequestDTO();
-        trancarRequestDTO.setIdBicicleta(5L);
+        trancarRequestDTO.setBicicleta(5L);
 
         doNothing().when(trancaService).trancarTranca(eq(1L), any(TrancarRequestDTO.class));
 
@@ -133,7 +133,7 @@ class TrancaControllerTest {
     @Test
     void testDestrancarTranca() throws Exception {
         DestrancarRequestDTO destrancarRequestDTO = new DestrancarRequestDTO();
-        destrancarRequestDTO.setIdBicicleta(5L);
+        destrancarRequestDTO.setBicicleta(5L);
 
         doNothing().when(trancaService).destrancarTranca(eq(1L), any(DestrancarRequestDTO.class));
 
@@ -176,7 +176,7 @@ class TrancaControllerTest {
         retirarTrancaDTO.setIdTranca(1L);
         retirarTrancaDTO.setIdTotem(10L);
         retirarTrancaDTO.setIdFuncionario(100L);
-        retirarTrancaDTO.setAcao(AcaoRetirar.APOSENTADORIA);
+        retirarTrancaDTO.setStatusAcaoReparador(AcaoRetirar.APOSENTADORIA);
 
         doNothing().when(trancaService).retirarDaRede(any(RetirarTrancaDTO.class));
 

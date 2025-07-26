@@ -16,5 +16,5 @@ public class RetirarBicicletaDTO {
     private Long idFuncionario;
 
     @NotNull
-    private AcaoRetirar acao;
+    private AcaoRetirar statusAcaoReparador;
 }

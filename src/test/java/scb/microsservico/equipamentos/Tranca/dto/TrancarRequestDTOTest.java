@@ -10,17 +10,17 @@ class TrancarRequestDTOTest {
     @Test
     void testSettersAndGetters() {
         TrancarRequestDTO dto = new TrancarRequestDTO();
-        dto.setIdBicicleta(1L);
-        assertEquals(1L, dto.getIdBicicleta());
+        dto.setBicicleta(1L);
+        assertEquals(1L, dto.getBicicleta());
     }
 
     @Test
     void testEqualsAndHashCode() {
         TrancarRequestDTO dto1 = new TrancarRequestDTO();
-        dto1.setIdBicicleta(1L);
+        dto1.setBicicleta(1L);
 
         TrancarRequestDTO dto2 = new TrancarRequestDTO();
-        dto2.setIdBicicleta(1L);
+        dto2.setBicicleta(1L);
 
         assertEquals(dto1, dto2);
         assertEquals(dto1.hashCode(), dto2.hashCode());
@@ -29,7 +29,7 @@ class TrancarRequestDTOTest {
     @Test
     void testToString() {
         TrancarRequestDTO dto = new TrancarRequestDTO();
-        dto.setIdBicicleta(1L);
+        dto.setBicicleta(1L);
 
         String str = dto.toString();
         assertTrue(str.contains("idBicicleta=1"));

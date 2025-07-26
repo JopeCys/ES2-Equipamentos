@@ -4,5 +4,5 @@ import lombok.Data;
 
 @Data // Gera getters, setters e outros métodos automaticamente
 public class DestrancarRequestDTO {
-    private Long idBicicleta;
+    private Long bicicleta;
 }

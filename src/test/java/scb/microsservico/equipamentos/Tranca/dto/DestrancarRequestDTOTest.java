@@ -10,20 +10,20 @@ class DestrancarRequestDTOTest {
     @Test
     void testSetAndGetIdBicicleta() {
         DestrancarRequestDTO dto = new DestrancarRequestDTO();
-        dto.setIdBicicleta(1L);
-        assertEquals(1L, dto.getIdBicicleta());
+        dto.setBicicleta(1L);
+        assertEquals(1L, dto.getBicicleta());
     }
 
     @Test
     void testEqualsAndHashCode() {
         DestrancarRequestDTO dto1 = new DestrancarRequestDTO();
-        dto1.setIdBicicleta(1L);
+        dto1.setBicicleta(1L);
 
         DestrancarRequestDTO dto2 = new DestrancarRequestDTO();
-        dto2.setIdBicicleta(1L);
+        dto2.setBicicleta(1L);
 
         DestrancarRequestDTO dto3 = new DestrancarRequestDTO();
-        dto3.setIdBicicleta(2L);
+        dto3.setBicicleta(2L);
 
         // Teste de igualdade
         assertEquals(dto1, dto2);
@@ -37,7 +37,7 @@ class DestrancarRequestDTOTest {
     @Test
     void testToString() {
         DestrancarRequestDTO dto = new DestrancarRequestDTO();
-        dto.setIdBicicleta(1L);
+        dto.setBicicleta(1L);
         String str = dto.toString();
         assertTrue(str.contains("idBicicleta=1"));
     }
@@ -45,6 +45,6 @@ class DestrancarRequestDTOTest {
     @Test
     void testNoArgsConstructor() {
         DestrancarRequestDTO dto = new DestrancarRequestDTO();
-        assertNull(dto.getIdBicicleta());
+        assertNull(dto.getBicicleta());
     }
 }

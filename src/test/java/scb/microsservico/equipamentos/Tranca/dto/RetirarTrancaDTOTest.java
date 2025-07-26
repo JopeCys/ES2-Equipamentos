@@ -13,12 +13,12 @@ public class RetirarTrancaDTOTest {
         dto.setIdTranca(1L);
         dto.setIdTotem(2L);
         dto.setIdFuncionario(3L);
-        dto.setAcao(AcaoRetirar.REPARO);
+        dto.setStatusAcaoReparador(AcaoRetirar.REPARO);
 
         assertEquals(1L, dto.getIdTranca());
         assertEquals(2L, dto.getIdTotem());
         assertEquals(3L, dto.getIdFuncionario());
-        assertEquals(AcaoRetirar.REPARO, dto.getAcao());
+        assertEquals(AcaoRetirar.REPARO, dto.getStatusAcaoReparador());
     }
 
     @Test
@@ -27,13 +27,13 @@ public class RetirarTrancaDTOTest {
         dto1.setIdTranca(1L);
         dto1.setIdTotem(2L);
         dto1.setIdFuncionario(3L);
-        dto1.setAcao(AcaoRetirar.REPARO);
+        dto1.setStatusAcaoReparador(AcaoRetirar.REPARO);
 
         RetirarTrancaDTO dto2 = new RetirarTrancaDTO();
         dto2.setIdTranca(1L);
         dto2.setIdTotem(2L);
         dto2.setIdFuncionario(3L);
-        dto2.setAcao(AcaoRetirar.REPARO);
+        dto2.setStatusAcaoReparador(AcaoRetirar.REPARO);
 
         assertEquals(dto1, dto2);
         assertEquals(dto1.hashCode(), dto2.hashCode());
@@ -45,7 +45,7 @@ public class RetirarTrancaDTOTest {
         dto.setIdTranca(1L);
         dto.setIdTotem(2L);
         dto.setIdFuncionario(3L);
-        dto.setAcao(AcaoRetirar.APOSENTADORIA);
+        dto.setStatusAcaoReparador(AcaoRetirar.APOSENTADORIA);
 
         String str = dto.toString();
 

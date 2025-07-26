@@ -117,7 +117,7 @@ class TrancaServiceTest {
     void trancarTranca_deveAssociarBicicletaETrancar() {
         tranca.setStatus(TrancaStatus.LIVRE);
         TrancarRequestDTO request = new TrancarRequestDTO();
-        request.setIdBicicleta(bicicleta.getId());
+        request.setBicicleta(bicicleta.getId());
 
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
         when(bicicletaRepository.findById(bicicleta.getId())).thenReturn(Optional.of(bicicleta));
@@ -134,7 +134,7 @@ class TrancaServiceTest {
         tranca.setStatus(TrancaStatus.OCUPADA);
         tranca.setBicicleta(bicicleta.getNumero());
         DestrancarRequestDTO request = new DestrancarRequestDTO();
-        request.setIdBicicleta(bicicleta.getId());
+        request.setBicicleta(bicicleta.getId());
 
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
         when(bicicletaRepository.findById(bicicleta.getId())).thenReturn(Optional.of(bicicleta));
@@ -174,7 +174,7 @@ class TrancaServiceTest {
         RetirarTrancaDTO request = new RetirarTrancaDTO();
         request.setIdTranca(tranca.getId());
         request.setIdTotem(totem.getId());
-        request.setAcao(AcaoRetirar.REPARO);
+        request.setStatusAcaoReparador(AcaoRetirar.REPARO);
         request.setIdFuncionario(1L);
 
         FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();

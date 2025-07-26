@@ -16,5 +16,5 @@ public class RetirarTrancaDTO {
     private Long idFuncionario;
 
     @NotNull
-    private AcaoRetirar acao;
+    private AcaoRetirar statusAcaoReparador;
 }

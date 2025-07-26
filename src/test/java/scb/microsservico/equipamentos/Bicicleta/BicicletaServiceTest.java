@@ -215,7 +215,7 @@ class BicicletaServiceTest {
         retirarDTO.setIdBicicleta(1L);
         retirarDTO.setIdTranca(1L);
         retirarDTO.setIdFuncionario(1L);
-        retirarDTO.setAcao(AcaoRetirar.REPARO);
+        retirarDTO.setStatusAcaoReparador(AcaoRetirar.REPARO);
 
         FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
         funcionarioEmailDTO.setEmail("teste@email.com");
@@ -240,7 +240,7 @@ class BicicletaServiceTest {
         retirarDTO.setIdBicicleta(1L);
         retirarDTO.setIdTranca(1L);
         retirarDTO.setIdFuncionario(1L);
-        retirarDTO.setAcao(AcaoRetirar.APOSENTADORIA);
+        retirarDTO.setStatusAcaoReparador(AcaoRetirar.APOSENTADORIA);
 
         FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
         funcionarioEmailDTO.setEmail("teste@email.com");

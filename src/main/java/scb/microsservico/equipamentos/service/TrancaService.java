@@ -131,8 +131,8 @@ public class TrancaService {
         }
 
         // Para haver alteração, idBicicleta deve
-        if (dto != null && dto.getIdBicicleta() != null) {
-            Bicicleta bicicleta = bicicletaRepository.findById(dto.getIdBicicleta())
+        if (dto != null && dto.getBicicleta() != null) {
+            Bicicleta bicicleta = bicicletaRepository.findById(dto.getBicicleta())
                     .orElseThrow(BicicletaNotFoundException::new);
 
             bicicleta.setStatus(BicicletaStatus.DISPONIVEL);
@@ -156,8 +156,8 @@ public class TrancaService {
             throw new TrancaLivreException();
         }
 
-        if (dto != null && dto.getIdBicicleta() != null) {
-            Bicicleta bicicleta = bicicletaRepository.findById(dto.getIdBicicleta())
+        if (dto != null && dto.getBicicleta() != null) {
+            Bicicleta bicicleta = bicicletaRepository.findById(dto.getBicicleta())
                     .orElseThrow(BicicletaNotFoundException::new);
 
             bicicleta.setStatus(BicicletaStatus.EM_USO);
@@ -263,9 +263,9 @@ public class TrancaService {
         }
 
         // Atualiza status da tranca conforme ação
-        if (dto.getAcao() == AcaoRetirar.REPARO) {
+        if (dto.getStatusAcaoReparador() == AcaoRetirar.REPARO) {
             tranca.setStatus(TrancaStatus.EM_REPARO);
-        } else if (dto.getAcao() == AcaoRetirar.APOSENTADORIA) {
+        } else if (dto.getStatusAcaoReparador() == AcaoRetirar.APOSENTADORIA) {
             tranca.setStatus(TrancaStatus.APOSENTADA);
         }
 
@@ -275,7 +275,7 @@ public class TrancaService {
         // Registra operação e envia notificação
         String descricao = String.format(
             "Tranca %d (Número: %d) retirada do totem %d na localização '%s' pelo funcionário %d. Ação: %s.",
-            tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario(), dto.getAcao()
+            tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario(), dto.getStatusAcaoReparador()
         );
         registrarOperacao("RETIRADA", descricao, dto.getIdFuncionario());
 
