@@ -32,6 +32,6 @@ class TrancarRequestDTOTest {
         dto.setBicicleta(1L);
 
         String str = dto.toString();
-        assertTrue(str.contains("idBicicleta=1"));
+        assertTrue(str.contains("bicicleta=1"));
     }
 }

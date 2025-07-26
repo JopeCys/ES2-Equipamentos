@@ -70,11 +70,12 @@ class TrancaCreateDTOTest {
         TrancaCreateDTO dto = new TrancaCreateDTO();
         dto.setAnoDeFabricacao("2023");
         dto.setModelo("Modelo Válido");
+        dto.setLocalizacao("Localização Válida");
 
         Set<ConstraintViolation<TrancaCreateDTO>> violations = validator.validate(dto);
         assertFalse(violations.isEmpty());
         assertEquals(1, violations.size());
-        assertEquals("must not be null", violations.iterator().next().getMessage());
+        assertEquals("não deve ser nulo", violations.iterator().next().getMessage());
     }
 
     @Test

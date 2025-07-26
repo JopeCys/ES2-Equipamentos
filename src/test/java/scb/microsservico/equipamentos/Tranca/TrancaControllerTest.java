@@ -17,6 +17,8 @@ import scb.microsservico.equipamentos.service.TrancaService;
 
 import java.util.Collections;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -45,6 +47,7 @@ class TrancaControllerTest {
         trancaCreateDTO.setNumero(100);
         trancaCreateDTO.setModelo("Modelo Teste");
         trancaCreateDTO.setAnoDeFabricacao("2023");
+        trancaCreateDTO.setLocalizacao("Local Teste");
 
         trancaResponseDTO = new TrancaResponseDTO();
         trancaResponseDTO.setId(1L);
@@ -56,6 +59,7 @@ class TrancaControllerTest {
         trancaUpdateDTO = new TrancaUpdateDTO();
         trancaUpdateDTO.setModelo("Modelo Atualizado");
         trancaUpdateDTO.setAnoDeFabricacao("2024");
+        trancaUpdateDTO.setNumero(100); 
     }
 
     @Test

@@ -13,8 +13,8 @@ public class BicicletaCreateDTO {
     private String modelo;
     @NotBlank
     private String ano;
-    @NotNull
+
+    // Não obrigatórios, estão aqui para mera adequação ao swagger
     private Integer numero;
-    @NotNull
     private BicicletaStatus status;
 }

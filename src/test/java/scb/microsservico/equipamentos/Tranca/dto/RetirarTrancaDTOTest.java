@@ -52,6 +52,6 @@ public class RetirarTrancaDTOTest {
         assertTrue(str.contains("idTranca=1"));
         assertTrue(str.contains("idTotem=2"));
         assertTrue(str.contains("idFuncionario=3"));
-        assertTrue(str.contains("acao=APOSENTADORIA"));
+        assertTrue(str.contains("statusAcaoReparador=APOSENTADORIA"));
     }
 }

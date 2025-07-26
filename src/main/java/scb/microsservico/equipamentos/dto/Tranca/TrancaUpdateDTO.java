@@ -10,11 +10,11 @@ public class TrancaUpdateDTO {
     @NotNull
     private Integer numero;
     @NotBlank
-    private String localizacao;
-    @NotBlank
     private String anoDeFabricacao;
     @NotBlank
     private String modelo;
-    @NotNull
+    
+    // Não obrigatórios, estão aqui para mera adequação ao swagger
+    private String localizacao;
     private TrancaStatus status;
 }

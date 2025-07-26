@@ -39,7 +39,7 @@ class DestrancarRequestDTOTest {
         DestrancarRequestDTO dto = new DestrancarRequestDTO();
         dto.setBicicleta(1L);
         String str = dto.toString();
-        assertTrue(str.contains("idBicicleta=1"));
+        assertTrue(str.contains("bicicleta=1"));
     }
 
     @Test
