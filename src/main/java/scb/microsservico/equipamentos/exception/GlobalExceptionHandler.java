@@ -1,10 +1,11 @@
 package scb.microsservico.equipamentos.exception;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.ControllerAdvice;
+
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaOcupadaException;
@@ -16,81 +17,39 @@ import scb.microsservico.equipamentos.exception.Tranca.TrancaNaoIntegradaExcepti
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    // Manipuladores para exceções de Bicicleta
-    @ExceptionHandler(BicicletaNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Not Found
+    /**
+     * Manipulador para todas as exceções que devem retornar 404 Not Found.
+     * Retorna a mensagem da exceção como uma String no corpo da resposta.
+     */
+    @ExceptionHandler({
+        BicicletaNotFoundException.class,
+        TotemNotFoundException.class,
+        TrancaNotFoundException.class,
+        FuncionarioNotFoundException.class
+    })
+    @ResponseStatus(HttpStatus.NOT_FOUND) // 404
     @ResponseBody
-    public String handleBicicletaNotFoundException(BicicletaNotFoundException ex) {
+    public String handleNotFoundExceptions(RuntimeException ex) {
         return ex.getMessage();
     }
 
-    @ExceptionHandler(BicicletaOcupadaException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
+    /**
+     * Manipulador para todas as exceções que devem retornar 400 Bad Request.
+     * Retorna a mensagem da exceção como uma String no corpo da resposta.
+     */
+    @ExceptionHandler({
+        BicicletaOcupadaException.class,
+        TrancaOcupadaException.class,
+        TrancaLivreException.class,
+        TrancaJaIntegradaException.class,
+        TrancaNaoIntegradaException.class,
+        IllegalStateException.class
+    })
+    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400
     @ResponseBody
-    public String handleBicicletaOcupadaException(BicicletaOcupadaException ex) {
-        return ex.getMessage();
-    }
-
-    // Manipulador para exceções de Totem
-    @ExceptionHandler(TotemNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Not Found
-    @ResponseBody
-    public String handleTotemNotFoundException(TotemNotFoundException ex) {
-        return ex.getMessage();
-    }
-
-    // Manipuladores para exceções de Tranca
-    @ExceptionHandler(TrancaNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Not Found
-    @ResponseBody
-    public String handleTrancaNotFoundException(TrancaNotFoundException ex) {
-        return ex.getMessage();
-    }
-
-    @ExceptionHandler(TrancaOcupadaException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
-    @ResponseBody
-    public String handleTrancaOcupadaException(TrancaOcupadaException ex) {
-        return ex.getMessage();
-    }
-
-    @ExceptionHandler(TrancaLivreException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
-    @ResponseBody
-    public String handleTrancaLivreException(TrancaLivreException ex) {
-        return ex.getMessage();
-    }
-
-    @ExceptionHandler(TrancaJaIntegradaException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
-    @ResponseBody
-    public String handleTrancaJaIntegradaException(TrancaJaIntegradaException ex) {
-        return ex.getMessage();
-    }
-
-    @ExceptionHandler(TrancaNaoIntegradaException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
-    @ResponseBody
-    public String handleTrancaNaoIntegradaException(TrancaNaoIntegradaException ex) {
-        return ex.getMessage();
-    }
-
-    // Manipulador para exceções de Funcionario
-    @ExceptionHandler(FuncionarioNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Not Found
-    @ResponseBody
-    public String handleFuncionarioNotFoundException(FuncionarioNotFoundException ex) {
-        return ex.getMessage();
-    }
-
-    // Manipulador para exceções de estado ilegal
-    @ExceptionHandler(IllegalStateException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
-    @ResponseBody
-    public String handleIllegalStateException(IllegalStateException ex) {
+    public String handleBadRequestExceptions(RuntimeException ex) {
         return ex.getMessage();
     }
 }

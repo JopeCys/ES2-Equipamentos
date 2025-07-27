@@ -26,62 +26,62 @@ public class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void handleBicicletaNotFoundException() {
+    void handleNotFoundExceptions() {
         BicicletaNotFoundException ex = new BicicletaNotFoundException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleBicicletaNotFoundException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleNotFoundExceptions(ex));
     }
 
     @Test
-    void handleBicicletaOcupadaException() {
+    void handleBadRequestExceptions() {
         BicicletaOcupadaException ex = new BicicletaOcupadaException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleBicicletaOcupadaException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleBadRequestExceptions(ex));
     }
 
     @Test
     void handleTotemNotFoundException() {
         TotemNotFoundException ex = new TotemNotFoundException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleTotemNotFoundException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleNotFoundExceptions(ex));
     }
 
     @Test
     void handleTrancaNotFoundException() {
         TrancaNotFoundException ex = new TrancaNotFoundException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleTrancaNotFoundException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleNotFoundExceptions(ex));
     }
 
     @Test
     void handleTrancaOcupadaException() {
         TrancaOcupadaException ex = new TrancaOcupadaException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleTrancaOcupadaException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleBadRequestExceptions(ex));
     }
 
     @Test
     void handleTrancaLivreException() {
         TrancaLivreException ex = new TrancaLivreException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleTrancaLivreException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleBadRequestExceptions(ex));
     }
 
     @Test
     void handleTrancaJaIntegradaException() {
         TrancaJaIntegradaException ex = new TrancaJaIntegradaException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleTrancaJaIntegradaException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleBadRequestExceptions(ex));
     }
 
     @Test
     void handleTrancaNaoIntegradaException() {
         TrancaNaoIntegradaException ex = new TrancaNaoIntegradaException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleTrancaNaoIntegradaException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleBadRequestExceptions(ex));
     }
 
     @Test
     void handleIllegalStateException() {
         IllegalStateException ex = new IllegalStateException("Mensagem de teste");
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleIllegalStateException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleBadRequestExceptions(ex));
     }
 
     @Test
     void handleFuncionarioNotFoundException() {
         FuncionarioNotFoundException ex = new FuncionarioNotFoundException();
-        assertEquals(ex.getMessage(), globalExceptionHandler.handleFuncionarioNotFoundException(ex));
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleNotFoundExceptions(ex));
     }
 }

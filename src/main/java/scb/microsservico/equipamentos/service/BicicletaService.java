@@ -126,14 +126,13 @@ public class BicicletaService {
         registroOperacaoRepository.save(registro);
     }
 
-    private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
+   private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
         FuncionarioEmailDTO emailDTO;
         try {
             emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
-        } catch (FeignException.NotFound ex) {
+        } catch (FeignException.NotFound e) {
             throw new FuncionarioNotFoundException();
         }
-
         if (emailDTO == null || emailDTO.getEmail() == null || emailDTO.getEmail().isEmpty()) {
             throw new FuncionarioNotFoundException();
         }

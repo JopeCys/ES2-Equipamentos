@@ -194,13 +194,12 @@ public class TrancaService {
     }
 
     private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
-        FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
+        FuncionarioEmailDTO emailDTO;
         try {
             emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
-        } catch (FeignException.NotFound ex) {
+        } catch (FeignException.NotFound e) {
             throw new FuncionarioNotFoundException();
         }
-
         if (emailDTO == null || emailDTO.getEmail() == null || emailDTO.getEmail().isEmpty()) {
             throw new FuncionarioNotFoundException();
         }
