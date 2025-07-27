@@ -1,7 +1,6 @@
 package scb.microsservico.equipamentos.dto.Bicicleta;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import scb.microsservico.equipamentos.enums.BicicletaStatus;
 
