@@ -27,6 +27,7 @@ import scb.microsservico.equipamentos.enums.BicicletaStatus;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaOcupadaException;
+import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
 import scb.microsservico.equipamentos.mapper.BicicletaMapper;
 import scb.microsservico.equipamentos.model.Bicicleta;
@@ -125,16 +126,15 @@ public class BicicletaService {
     }
 
     private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
-        try {
-            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
-            EmailRequestDTO emailRequest = new EmailRequestDTO();
-            emailRequest.setEmail(emailDTO.getEmail());
-            emailRequest.setAssunto(assunto);
-            emailRequest.setMensagem(mensagem);
-            externoServiceClient.enviarEmail(emailRequest);
-        } catch (Exception e) {
-            System.err.println("ERRO: Não foi possível enviar o e-mail de notificação: " + e.getMessage());
+        FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
+        if (emailDTO == null || emailDTO.getEmail() == null || emailDTO.getEmail().isEmpty()) {
+            throw new FuncionarioNotFoundException();
         }
+        EmailRequestDTO emailRequest = new EmailRequestDTO();
+        emailRequest.setEmail(emailDTO.getEmail());
+        emailRequest.setAssunto(assunto);
+        emailRequest.setMensagem(mensagem);
+        externoServiceClient.enviarEmail(emailRequest);
     }
 
     // Integra uma bicicleta na rede, associando-a a uma tranca

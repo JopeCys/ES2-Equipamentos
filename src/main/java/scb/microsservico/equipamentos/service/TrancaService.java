@@ -32,6 +32,7 @@ import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
 import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.mapper.BicicletaMapper;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
+import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaJaIntegradaException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNaoIntegradaException; 
@@ -178,7 +179,7 @@ public class TrancaService {
                 .orElseThrow(TrancaNotFoundException::new);
 
         tranca.setStatus(acao);
-
+ 
         trancaRepository.save(tranca);
     }
 
@@ -192,16 +193,15 @@ public class TrancaService {
     }
 
     private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
-        try {
-            FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
-            EmailRequestDTO emailRequest = new EmailRequestDTO();
-            emailRequest.setEmail(emailDTO.getEmail());
-            emailRequest.setAssunto(assunto);
-            emailRequest.setMensagem(mensagem);
-            externoServiceClient.enviarEmail(emailRequest);
-        } catch (Exception e) {
-            System.err.println("ERRO: Não foi possível enviar o e-mail de notificação: " + e.getMessage());
+        FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
+        if (emailDTO == null || emailDTO.getEmail() == null || emailDTO.getEmail().isEmpty()) {
+            throw new FuncionarioNotFoundException();
         }
+        EmailRequestDTO emailRequest = new EmailRequestDTO();
+        emailRequest.setEmail(emailDTO.getEmail());
+        emailRequest.setAssunto(assunto);
+        emailRequest.setMensagem(mensagem);
+        externoServiceClient.enviarEmail(emailRequest);
     }
 
     // Integra uma tranca na rede, associando-a a um totem

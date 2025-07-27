@@ -12,6 +12,7 @@ import scb.microsservico.equipamentos.exception.Tranca.TrancaLivreException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNaoIntegradaException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
+import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -76,5 +77,11 @@ public class GlobalExceptionHandlerTest {
     void handleIllegalStateException() {
         IllegalStateException ex = new IllegalStateException("Mensagem de teste");
         assertEquals(ex.getMessage(), globalExceptionHandler.handleIllegalStateException(ex));
+    }
+
+    @Test
+    void handleFuncionarioNotFoundException() {
+        FuncionarioNotFoundException ex = new FuncionarioNotFoundException();
+        assertEquals(ex.getMessage(), globalExceptionHandler.handleFuncionarioNotFoundException(ex));
     }
 }

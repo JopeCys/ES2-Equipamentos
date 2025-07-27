@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaOcupadaException;
+import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaJaIntegradaException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaLivreException;
@@ -74,6 +75,14 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST) // 400 Bad Request
     @ResponseBody
     public String handleTrancaNaoIntegradaException(TrancaNaoIntegradaException ex) {
+        return ex.getMessage();
+    }
+
+    // Manipulador para exceções de Funcionario
+    @ExceptionHandler(FuncionarioNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND) // 404 Not Found
+    @ResponseBody
+    public String handleFuncionarioNotFoundException(FuncionarioNotFoundException ex) {
         return ex.getMessage();
     }
 
