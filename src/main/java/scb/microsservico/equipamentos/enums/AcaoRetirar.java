@@ -1,6 +1,6 @@
 package scb.microsservico.equipamentos.enums;
 
 public enum AcaoRetirar {
-    REPARO,
-    APOSENTADORIA
+    EM_REPARO,
+    APOSENTADA
 }

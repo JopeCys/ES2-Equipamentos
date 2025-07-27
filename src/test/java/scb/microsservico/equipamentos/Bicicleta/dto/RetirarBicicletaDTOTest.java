@@ -14,12 +14,12 @@ class RetirarBicicletaDTOTest {
         dto.setIdTranca(1L);
         dto.setIdBicicleta(2L);
         dto.setIdFuncionario(3L);
-        dto.setStatusAcaoReparador(AcaoRetirar.REPARO);
+        dto.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
 
         assertEquals(1L, dto.getIdTranca());
         assertEquals(2L, dto.getIdBicicleta());
         assertEquals(3L, dto.getIdFuncionario());
-        assertEquals(AcaoRetirar.REPARO, dto.getStatusAcaoReparador());
+        assertEquals(AcaoRetirar.EM_REPARO, dto.getStatusAcaoReparador());
     }
 
     @Test
@@ -28,13 +28,13 @@ class RetirarBicicletaDTOTest {
         dto1.setIdTranca(1L);
         dto1.setIdBicicleta(2L);
         dto1.setIdFuncionario(3L);
-        dto1.setStatusAcaoReparador(AcaoRetirar.REPARO);
+        dto1.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
 
         RetirarBicicletaDTO dto2 = new RetirarBicicletaDTO();
         dto2.setIdTranca(1L);
         dto2.setIdBicicleta(2L);
         dto2.setIdFuncionario(3L);
-        dto2.setStatusAcaoReparador(AcaoRetirar.REPARO);
+        dto2.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
 
         assertEquals(dto1, dto2);
         assertEquals(dto1.hashCode(), dto2.hashCode());
@@ -46,7 +46,7 @@ class RetirarBicicletaDTOTest {
         dto.setIdTranca(1L);
         dto.setIdBicicleta(2L);
         dto.setIdFuncionario(3L);
-        dto.setStatusAcaoReparador(AcaoRetirar.APOSENTADORIA);
+        dto.setStatusAcaoReparador(AcaoRetirar.APOSENTADA);
 
         String str = dto.toString();
         assertTrue(str.contains("idTranca=1"));

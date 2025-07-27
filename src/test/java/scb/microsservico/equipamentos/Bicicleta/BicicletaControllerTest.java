@@ -124,7 +124,7 @@ public class BicicletaControllerTest {
         retirarBicicletaDTO.setIdTranca(1L);
         retirarBicicletaDTO.setIdBicicleta(1L);
         retirarBicicletaDTO.setIdFuncionario(1L);
-        retirarBicicletaDTO.setStatusAcaoReparador(AcaoRetirar.REPARO);
+        retirarBicicletaDTO.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
 
 
         doNothing().when(bicicletaService).retirarBicicletaDaRede(retirarBicicletaDTO);

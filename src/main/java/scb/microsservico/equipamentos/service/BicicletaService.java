@@ -196,9 +196,9 @@ public class BicicletaService {
         destrancarRequestDTO.setBicicleta(bicicleta.getId());
         trancaService.destrancarTranca(dto.getIdTranca(), destrancarRequestDTO);
 
-        if(dto.getStatusAcaoReparador() == AcaoRetirar.REPARO) {
+        if(dto.getStatusAcaoReparador() == AcaoRetirar.EM_REPARO) {
             bicicleta.setStatus(BicicletaStatus.EM_REPARO);
-        } else if (dto.getStatusAcaoReparador() == AcaoRetirar.APOSENTADORIA) {
+        } else if (dto.getStatusAcaoReparador() == AcaoRetirar.APOSENTADA) {
             bicicleta.setStatus(BicicletaStatus.APOSENTADA);
         }
         bicicletaRepository.save(bicicleta);

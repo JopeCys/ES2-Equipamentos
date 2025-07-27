@@ -263,9 +263,9 @@ public class TrancaService {
         }
 
         // Atualiza status da tranca conforme ação
-        if (dto.getStatusAcaoReparador() == AcaoRetirar.REPARO) {
+        if (dto.getStatusAcaoReparador() == AcaoRetirar.EM_REPARO) {
             tranca.setStatus(TrancaStatus.EM_REPARO);
-        } else if (dto.getStatusAcaoReparador() == AcaoRetirar.APOSENTADORIA) {
+        } else if (dto.getStatusAcaoReparador() == AcaoRetirar.APOSENTADA) {
             tranca.setStatus(TrancaStatus.APOSENTADA);
         }
 

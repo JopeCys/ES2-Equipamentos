@@ -180,7 +180,7 @@ class TrancaControllerTest {
         retirarTrancaDTO.setIdTranca(1L);
         retirarTrancaDTO.setIdTotem(10L);
         retirarTrancaDTO.setIdFuncionario(100L);
-        retirarTrancaDTO.setStatusAcaoReparador(AcaoRetirar.APOSENTADORIA);
+        retirarTrancaDTO.setStatusAcaoReparador(AcaoRetirar.APOSENTADA);
 
         doNothing().when(trancaService).retirarDaRede(any(RetirarTrancaDTO.class));
 

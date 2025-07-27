@@ -174,7 +174,7 @@ class TrancaServiceTest {
         RetirarTrancaDTO request = new RetirarTrancaDTO();
         request.setIdTranca(tranca.getId());
         request.setIdTotem(totem.getId());
-        request.setStatusAcaoReparador(AcaoRetirar.REPARO);
+        request.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
         request.setIdFuncionario(1L);
 
         FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
