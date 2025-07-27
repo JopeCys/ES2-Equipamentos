@@ -1,5 +1,7 @@
 package scb.microsservico.equipamentos.service;
 
+import org.springframework.stereotype.Service;
+
 import feign.FeignException;
 
 import lombok.RequiredArgsConstructor;
@@ -10,6 +12,7 @@ import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
 import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 
+@Service // Indica que é um serviço do Spring
 @RequiredArgsConstructor // Injeta dependências via construtor
 public class EmailService {
 
