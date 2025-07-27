@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import feign.FeignException;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
@@ -126,10 +127,17 @@ public class BicicletaService {
     }
 
     private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
-        FuncionarioEmailDTO emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
+        FuncionarioEmailDTO emailDTO;
+        try {
+            emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
+        } catch (FeignException.NotFound ex) {
+            throw new FuncionarioNotFoundException();
+        }
+
         if (emailDTO == null || emailDTO.getEmail() == null || emailDTO.getEmail().isEmpty()) {
             throw new FuncionarioNotFoundException();
         }
+        
         EmailRequestDTO emailRequest = new EmailRequestDTO();
         emailRequest.setEmail(emailDTO.getEmail());
         emailRequest.setAssunto(assunto);
