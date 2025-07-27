@@ -10,6 +10,6 @@ import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
 @FeignClient(name = "scb-externo", url = "${scb-externo.url}")
 public interface ExternoServiceClient {
 
-    @PostMapping("/enviarEmail")
+    @PostMapping("/enviaEmail")
     void enviarEmail(@RequestBody EmailRequestDTO request);
 }
