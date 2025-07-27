@@ -20,7 +20,8 @@ public class Totem {
     @NotBlank
     private String descricao;
     
-    @OneToMany // Relacionamento um-para-muitos com Tranca
-    @JoinColumn(name = "idTotem")
+    // Relacionamento uma-para-muitos com a entidade Tranca
+    // mappedBy indica que a relação é gerenciada pelo campo 'totem' na classe Tranca.
+    @OneToMany(mappedBy = "totem")
     private List<Tranca> trancas;
 }

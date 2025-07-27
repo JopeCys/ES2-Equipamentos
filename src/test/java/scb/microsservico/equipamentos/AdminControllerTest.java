@@ -32,4 +32,13 @@ public class AdminControllerTest {
 
         verify(adminService, times(1)).restaurarBanco();
     }
+
+    @Test
+    public void testRestaurarDados() throws Exception {
+        mockMvc.perform(get("/restaurarDados"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Dados de equipamentos restaurados com sucesso."));
+
+        verify(adminService, times(1)).restaurarDados();
+    }
 }

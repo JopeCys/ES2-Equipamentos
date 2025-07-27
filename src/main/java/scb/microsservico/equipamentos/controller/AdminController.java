@@ -21,4 +21,10 @@ public class AdminController {
         adminService.restaurarBanco();
         return ResponseEntity.ok("Banco de dados de equipamentos restaurado com sucesso.");
     }
+
+    @GetMapping("/restaurarDados")
+    public ResponseEntity<String> restaurarDados() {
+        adminService.restaurarDados();
+        return ResponseEntity.ok("Dados de equipamentos restaurados com sucesso.");
+    }
 }
