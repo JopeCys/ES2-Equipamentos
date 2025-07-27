@@ -18,30 +18,22 @@ import scb.microsservico.equipamentos.exception.Tranca.TrancaOcupadaException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaLivreException;
 import scb.microsservico.equipamentos.mapper.TrancaMapper;
 import scb.microsservico.equipamentos.model.Bicicleta;
-import scb.microsservico.equipamentos.model.RegistroOperacao;
 import scb.microsservico.equipamentos.model.Totem;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
-import scb.microsservico.equipamentos.repository.RegistroOperacaoRepository;
 import scb.microsservico.equipamentos.repository.TotemRepository;
-import scb.microsservico.equipamentos.client.AluguelServiceClient;
-import scb.microsservico.equipamentos.client.ExternoServiceClient;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
-import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
-import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.mapper.BicicletaMapper;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
-import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.exception.Totem.TotemNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaJaIntegradaException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNaoIntegradaException; 
 
-
 import org.springframework.stereotype.Service;
 
-import feign.FeignException;
 import jakarta.transaction.Transactional;
+
 import lombok.RequiredArgsConstructor;
 
 @Service // Indica que é um serviço do Spring
@@ -52,11 +44,10 @@ public class TrancaService {
     private final TrancaRepository trancaRepository; 
     private final BicicletaRepository bicicletaRepository; 
     private final TotemRepository totemRepository;
-    private final RegistroOperacaoRepository registroOperacaoRepository;
     
     // Serviços auxiliares
-    private final ExternoServiceClient externoServiceClient; 
-    private final AluguelServiceClient aluguelServiceClient; 
+    private final OperacaoService operacaoService;
+    private final EmailService emailService; 
 
     
     // Cria uma nova tranca a partir do DTO
@@ -184,33 +175,6 @@ public class TrancaService {
         trancaRepository.save(tranca);
     }
 
-    private void registrarOperacao(String tipo, String descricao, Long idFuncionario) {
-        RegistroOperacao registro = new RegistroOperacao();
-        registro.setTipo(tipo);
-        registro.setDescricao(descricao);
-        registro.setDataHora(java.time.LocalDateTime.now());
-        registro.setIdFuncionario(idFuncionario);
-        registroOperacaoRepository.save(registro);
-    }
-
-    private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
-        FuncionarioEmailDTO emailDTO;
-        try {
-            emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
-        } catch (FeignException.NotFound e) {
-            throw new FuncionarioNotFoundException();
-        }
-        if (emailDTO == null || emailDTO.getEmail() == null || emailDTO.getEmail().isEmpty()) {
-            throw new FuncionarioNotFoundException();
-        }
-        
-        EmailRequestDTO emailRequest = new EmailRequestDTO();
-        emailRequest.setEmail(emailDTO.getEmail());
-        emailRequest.setAssunto(assunto);
-        emailRequest.setMensagem(mensagem);
-        externoServiceClient.enviarEmail(emailRequest);
-    }
-
     // Integra uma tranca na rede, associando-a a um totem
     @Transactional // Garante que todas as operações sejam atômicas
     public void integrarNaRede(IntegrarTrancaDTO dto) {
@@ -243,12 +207,12 @@ public class TrancaService {
             "Tranca %d (Número: %d) integrada ao totem %d na localização '%s' pelo funcionário %d.",
             tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario()
         );
-        registrarOperacao("INTEGRACAO", descricao, dto.getIdFuncionario());
+        operacaoService.registrarOperacao("INTEGRACAO", descricao, dto.getIdFuncionario());
 
         String assunto = "Integração de Tranca Realizada";
         String mensagem = String.format("A tranca %d (Número: %d) foi integrada com sucesso ao totem %d na localização '%s' pelo funcionário %d.",
             tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
-        enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
+        emailService.enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
     }
 
     // Retira uma tranca da rede, desassociando-a de um totem
@@ -284,11 +248,11 @@ public class TrancaService {
             "Tranca %d (Número: %d) retirada do totem %d na localização '%s' pelo funcionário %d. Ação: %s.",
             tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario(), dto.getStatusAcaoReparador()
         );
-        registrarOperacao("RETIRADA", descricao, dto.getIdFuncionario());
+        operacaoService.registrarOperacao("RETIRADA", descricao, dto.getIdFuncionario());
 
         String assunto = "Retirada de Tranca Realizada";
         String mensagem = String.format("A tranca %d (Número: %d) foi retirada do totem %d na localização '%s' pelo funcionário %d.",
             tranca.getId(), tranca.getNumero(), totem.getId(), totem.getLocalizacao(), dto.getIdFuncionario());
-        enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
+        emailService.enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
     }
 }

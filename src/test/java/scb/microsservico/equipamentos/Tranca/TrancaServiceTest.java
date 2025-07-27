@@ -6,28 +6,28 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import scb.microsservico.equipamentos.client.AluguelServiceClient;
-import scb.microsservico.equipamentos.client.ExternoServiceClient;
-import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
-import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
+
 import scb.microsservico.equipamentos.dto.Tranca.*;
 import scb.microsservico.equipamentos.enums.AcaoRetirar;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
-import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.*;
 import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Totem;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
-import scb.microsservico.equipamentos.repository.RegistroOperacaoRepository;
 import scb.microsservico.equipamentos.repository.TotemRepository;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
+import scb.microsservico.equipamentos.service.EmailService;
+import scb.microsservico.equipamentos.service.OperacaoService;
 import scb.microsservico.equipamentos.service.TrancaService;
 
+import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,12 +40,10 @@ class TrancaServiceTest {
     @Mock
     private TotemRepository totemRepository;
     @Mock
-    private ExternoServiceClient externoServiceClient;
+    private EmailService emailService;
     @Mock
-    private AluguelServiceClient aluguelServiceClient;
-    @Mock
-    private RegistroOperacaoRepository registroOperacaoRepository;
-
+    private OperacaoService operacaoService;
+    
     @InjectMocks
     private TrancaService trancaService;
 
@@ -66,6 +64,8 @@ class TrancaServiceTest {
 
         totem = new Totem();
         totem.setId(1L);
+        totem.setLocalizacao("Rua Teste");
+        totem.setTrancas(new ArrayList<>()); 
     }
 
     @Test
@@ -150,81 +150,76 @@ class TrancaServiceTest {
 
     @Test
     void integrarNaRede_deveIntegrarTrancaAoTotem() {
-        tranca.setStatus(TrancaStatus.NOVA);
+        tranca.setStatus(TrancaStatus.NOVA); // Status que permite integração
         IntegrarTrancaDTO request = new IntegrarTrancaDTO();
         request.setIdTranca(tranca.getId());
         request.setIdTotem(totem.getId());
         request.setIdFuncionario(1L);
 
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail("reparador@email.com");
-
         when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
         when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         trancaService.integrarNaRede(request);
 
         assertEquals(TrancaStatus.LIVRE, tranca.getStatus());
-        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
+        assertEquals(totem.getLocalizacao(), tranca.getLocalizacao());
+        assertTrue(totem.getTrancas().contains(tranca));
+        
+        verify(totemRepository, times(1)).save(totem);
+        verify(trancaRepository, times(1)).save(tranca);
+        verify(operacaoService, times(1)).registrarOperacao(anyString(), anyString(), anyLong());
+        verify(emailService, times(1)).enviarEmailNotificacao(anyLong(), anyString(), anyString());
     }
+    
+    @Test
+    void integrarNaRede_QuandoJaIntegrada_DeveLancarExcecao() {
+        tranca.setStatus(TrancaStatus.LIVRE); // Status que não permite integração
+        IntegrarTrancaDTO request = new IntegrarTrancaDTO();
+        request.setIdTranca(tranca.getId());
+        request.setIdTotem(totem.getId());
+        
+        when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
+        when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
+
+        assertThrows(TrancaJaIntegradaException.class, () -> trancaService.integrarNaRede(request));
+    }
+
 
     @Test
     void retirarDaRede_deveRetirarTrancaDoTotem() {
-        totem.setTrancas(new java.util.ArrayList<>(java.util.List.of(tranca)));
+        totem.getTrancas().add(tranca); // Adiciona a tranca ao totem para o teste
         RetirarTrancaDTO request = new RetirarTrancaDTO();
         request.setIdTranca(tranca.getId());
         request.setIdTotem(totem.getId());
         request.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
         request.setIdFuncionario(1L);
 
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail("reparador@email.com");
-
         when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
         when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         trancaService.retirarDaRede(request);
 
         assertEquals(TrancaStatus.EM_REPARO, tranca.getStatus());
-        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
+        assertNull(tranca.getLocalizacao());
+        assertFalse(totem.getTrancas().contains(tranca));
+        
+        verify(totemRepository, times(1)).save(totem);
+        verify(trancaRepository, times(1)).save(tranca);
+        verify(operacaoService, times(1)).registrarOperacao(anyString(), anyString(), anyLong());
+        verify(emailService, times(1)).enviarEmailNotificacao(anyLong(), anyString(), anyString());
     }
-
+    
     @Test
-    void integrarNaRede_QuandoFuncionarioNaoTemEmail_DeveLancarFuncionarioNotFoundException() {
-        tranca.setStatus(TrancaStatus.NOVA);
-        IntegrarTrancaDTO request = new IntegrarTrancaDTO();
-        request.setIdTranca(tranca.getId());
-        request.setIdTotem(totem.getId());
-        request.setIdFuncionario(1L);
-
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail(null); // Email inexistente
-
-        when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
-        when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
-
-        assertThrows(FuncionarioNotFoundException.class, () -> trancaService.integrarNaRede(request));
-    }
-
-    @Test
-    void retirarDaRede_QuandoFuncionarioNaoTemEmail_DeveLancarFuncionarioNotFoundException() {
-        totem.setTrancas(new java.util.ArrayList<>(java.util.List.of(tranca)));
+    void retirarDaRede_QuandoTrancaNaoEstaNoTotem_DeveLancarExcecao() {
         RetirarTrancaDTO request = new RetirarTrancaDTO();
         request.setIdTranca(tranca.getId());
         request.setIdTotem(totem.getId());
-        request.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
+        request.setStatusAcaoReparador(AcaoRetirar.APOSENTADA);
         request.setIdFuncionario(1L);
-
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail(""); // Email vazio
 
         when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
         when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
-
-        assertThrows(FuncionarioNotFoundException.class, () -> trancaService.retirarDaRede(request));
+        
+        assertThrows(TrancaNaoIntegradaException.class, () -> trancaService.retirarDaRede(request));
     }
 }

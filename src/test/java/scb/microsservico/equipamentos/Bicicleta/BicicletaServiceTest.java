@@ -3,18 +3,16 @@ package scb.microsservico.equipamentos.Bicicleta;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import scb.microsservico.equipamentos.client.AluguelServiceClient;
-import scb.microsservico.equipamentos.client.ExternoServiceClient;
+
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaCreateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaUpdateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.IntegrarBicicletaDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.RetirarBicicletaDTO;
-import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
-import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.dto.Tranca.DestrancarRequestDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancarRequestDTO;
 import scb.microsservico.equipamentos.enums.AcaoRetirar;
@@ -22,13 +20,13 @@ import scb.microsservico.equipamentos.enums.BicicletaStatus;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaOcupadaException;
-import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
-import scb.microsservico.equipamentos.repository.RegistroOperacaoRepository;
 import scb.microsservico.equipamentos.service.BicicletaService;
+import scb.microsservico.equipamentos.service.EmailService;
+import scb.microsservico.equipamentos.service.OperacaoService;
 import scb.microsservico.equipamentos.service.TrancaService;
 
 import java.util.Collections;
@@ -38,6 +36,9 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -50,11 +51,9 @@ class BicicletaServiceTest {
     @Mock
     private TrancaService trancaService;
     @Mock
-    private AluguelServiceClient aluguelServiceClient;
+    private OperacaoService operacaoService;
     @Mock
-    private ExternoServiceClient externoServiceClient;
-    @Mock
-    private RegistroOperacaoRepository registroOperacaoRepository;
+    private EmailService emailService;
 
     @InjectMocks
     private BicicletaService bicicletaService;
@@ -178,19 +177,16 @@ class BicicletaServiceTest {
         integrarDTO.setIdTranca(1L);
         integrarDTO.setIdFuncionario(1L);
 
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail("teste@email.com");
-
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         bicicletaService.integrarBicicletaNaRede(integrarDTO);
 
         verify(trancaService, times(1)).trancarTranca(eq(1L), any(TrancarRequestDTO.class));
         assertEquals(BicicletaStatus.DISPONIVEL, bicicleta.getStatus());
         verify(bicicletaRepository, times(1)).save(bicicleta);
-        verify(externoServiceClient, times(1)).enviarEmail(any(scb.microsservico.equipamentos.dto.Client.EmailRequestDTO.class));
+        verify(operacaoService, times(1)).registrarOperacao(anyString(), anyString(), anyLong());
+        verify(emailService, times(1)).enviarEmailNotificacao(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -203,9 +199,7 @@ class BicicletaServiceTest {
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
 
-        assertThrows(IllegalStateException.class, () -> {
-            bicicletaService.integrarBicicletaNaRede(integrarDTO);
-        });
+        assertThrows(IllegalStateException.class, () -> bicicletaService.integrarBicicletaNaRede(integrarDTO));
     }
 
     @Test
@@ -218,19 +212,16 @@ class BicicletaServiceTest {
         retirarDTO.setIdFuncionario(1L);
         retirarDTO.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
 
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail("teste@email.com");
-
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         bicicletaService.retirarBicicletaDaRede(retirarDTO);
 
         verify(trancaService, times(1)).destrancarTranca(eq(1L), any(DestrancarRequestDTO.class));
         assertEquals(BicicletaStatus.EM_REPARO, bicicleta.getStatus());
         verify(bicicletaRepository, times(1)).save(bicicleta);
-        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
+        verify(operacaoService, times(1)).registrarOperacao(anyString(), anyString(), anyLong());
+        verify(emailService, times(1)).enviarEmailNotificacao(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -243,19 +234,16 @@ class BicicletaServiceTest {
         retirarDTO.setIdFuncionario(1L);
         retirarDTO.setStatusAcaoReparador(AcaoRetirar.APOSENTADA);
 
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail("teste@email.com");
-
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
 
         bicicletaService.retirarBicicletaDaRede(retirarDTO);
 
         verify(trancaService, times(1)).destrancarTranca(eq(1L), any(DestrancarRequestDTO.class));
         assertEquals(BicicletaStatus.APOSENTADA, bicicleta.getStatus());
         verify(bicicletaRepository, times(1)).save(bicicleta);
-        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
+        verify(operacaoService, times(1)).registrarOperacao(anyString(), anyString(), anyLong());
+        verify(emailService, times(1)).enviarEmailNotificacao(anyLong(), anyString(), anyString());
     }
 
     @Test
@@ -268,45 +256,6 @@ class BicicletaServiceTest {
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
 
-        assertThrows(IllegalStateException.class, () -> {
-            bicicletaService.retirarBicicletaDaRede(retirarDTO);
-        });
-    }
-
-    @Test
-    void integrarBicicletaNaRede_QuandoFuncionarioNaoTemEmail_DeveLancarFuncionarioNotFoundException() {
-        IntegrarBicicletaDTO integrarDTO = new IntegrarBicicletaDTO();
-        integrarDTO.setIdBicicleta(1L);
-        integrarDTO.setIdTranca(1L);
-        integrarDTO.setIdFuncionario(1L);
-
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail(null); // Email inexistente
-
-        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
-        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
-
-        assertThrows(FuncionarioNotFoundException.class, () -> bicicletaService.integrarBicicletaNaRede(integrarDTO));
-    }
-
-    @Test
-    void retirarBicicletaDaRede_QuandoFuncionarioNaoTemEmail_DeveLancarFuncionarioNotFoundException() {
-        bicicleta.setStatus(BicicletaStatus.EM_USO);
-        tranca.setStatus(TrancaStatus.OCUPADA);
-        RetirarBicicletaDTO retirarDTO = new RetirarBicicletaDTO();
-        retirarDTO.setIdBicicleta(1L);
-        retirarDTO.setIdTranca(1L);
-        retirarDTO.setIdFuncionario(1L);
-        retirarDTO.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
-
-        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail(""); // Email vazio
-
-        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
-        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
-        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
-
-        assertThrows(FuncionarioNotFoundException.class, () -> bicicletaService.retirarBicicletaDaRede(retirarDTO));
+        assertThrows(IllegalStateException.class, () -> bicicletaService.retirarBicicletaDaRede(retirarDTO));
     }
 }

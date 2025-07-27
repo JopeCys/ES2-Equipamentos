@@ -7,20 +7,15 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
-import feign.FeignException;
 import jakarta.transaction.Transactional;
 
 import lombok.RequiredArgsConstructor;
 
-import scb.microsservico.equipamentos.client.AluguelServiceClient;
-import scb.microsservico.equipamentos.client.ExternoServiceClient;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaCreateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaResponseDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.BicicletaUpdateDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.IntegrarBicicletaDTO;
 import scb.microsservico.equipamentos.dto.Bicicleta.RetirarBicicletaDTO;
-import scb.microsservico.equipamentos.dto.Client.EmailRequestDTO;
-import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.dto.Tranca.DestrancarRequestDTO;
 import scb.microsservico.equipamentos.dto.Tranca.TrancarRequestDTO;
 import scb.microsservico.equipamentos.enums.AcaoRetirar;
@@ -28,14 +23,11 @@ import scb.microsservico.equipamentos.enums.BicicletaStatus;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaOcupadaException;
-import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.TrancaNotFoundException;
 import scb.microsservico.equipamentos.mapper.BicicletaMapper;
 import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Tranca;
-import scb.microsservico.equipamentos.model.RegistroOperacao;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
-import scb.microsservico.equipamentos.repository.RegistroOperacaoRepository;
 import scb.microsservico.equipamentos.repository.TrancaRepository;
 
 @Service // Indica que é um serviço do Spring
@@ -45,12 +37,11 @@ public class BicicletaService {
     // Repositórios para acesso ao banco
     private final BicicletaRepository bicicletaRepository; 
     private final TrancaRepository trancaRepository;
-    private final RegistroOperacaoRepository registroOperacaoRepository; 
     
     // Serviços auxiliares
     private final TrancaService trancaService;
-    private final AluguelServiceClient aluguelServiceClient;
-    private final ExternoServiceClient externoServiceClient;
+    private final OperacaoService operacaoService;
+    private final EmailService emailService;
 
 
     // Cria uma nova bicicleta a partir do DTO
@@ -117,33 +108,6 @@ public class BicicletaService {
         bicicletaRepository.save(bicicleta);
     }
 
-    private void registrarOperacao(String tipo, String descricao, Long idFuncionario) {
-        RegistroOperacao registro = new RegistroOperacao();
-        registro.setTipo(tipo);
-        registro.setDescricao(descricao);
-        registro.setDataHora(java.time.LocalDateTime.now());
-        registro.setIdFuncionario(idFuncionario);
-        registroOperacaoRepository.save(registro);
-    }
-
-   private void enviarEmailNotificacao(Long idFuncionario, String assunto, String mensagem) {
-        FuncionarioEmailDTO emailDTO;
-        try {
-            emailDTO = aluguelServiceClient.getEmailFuncionario(idFuncionario);
-        } catch (FeignException.NotFound e) {
-            throw new FuncionarioNotFoundException();
-        }
-        if (emailDTO == null || emailDTO.getEmail() == null || emailDTO.getEmail().isEmpty()) {
-            throw new FuncionarioNotFoundException();
-        }
-        
-        EmailRequestDTO emailRequest = new EmailRequestDTO();
-        emailRequest.setEmail(emailDTO.getEmail());
-        emailRequest.setAssunto(assunto);
-        emailRequest.setMensagem(mensagem);
-        externoServiceClient.enviarEmail(emailRequest);
-    }
-
     // Integra uma bicicleta na rede, associando-a a uma tranca
     @Transactional // Garante que todas as operações sejam atômicas
     public void integrarBicicletaNaRede(IntegrarBicicletaDTO dto) {
@@ -175,12 +139,12 @@ public class BicicletaService {
             "Bicicleta %d integrada na tranca %d pelo funcionário %d.",
             bicicleta.getNumero(), tranca.getNumero(), dto.getIdFuncionario()
         );
-        registrarOperacao("INTEGRACAO", descricao, dto.getIdFuncionario());
+        operacaoService.registrarOperacao("INTEGRACAO", descricao, dto.getIdFuncionario());
 
         String assunto = "Bicicleta integrada ao sistema";
         String mensagem = String.format("A bicicleta de número %d foi incluída na tranca de número %d.",
             bicicleta.getNumero(), tranca.getNumero());
-        enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
+        emailService.enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
     }
     
     // Retira uma bicicleta da rede, desassociando-a de uma tranca
@@ -215,11 +179,11 @@ public class BicicletaService {
             "Bicicleta %d retirada da tranca %d pelo funcionário %d.",
             bicicleta.getNumero(), tranca.getNumero(), dto.getIdFuncionario()
         );
-        registrarOperacao("RETIRADA", descricao, dto.getIdFuncionario());
+        operacaoService.registrarOperacao("RETIRADA", descricao, dto.getIdFuncionario());
 
         String assunto = "Bicicleta retirada do sistema";
         String mensagem = String.format("A bicicleta de número %d foi retirada da tranca de número %d.",
             bicicleta.getNumero(), tranca.getNumero());
-        enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
+        emailService.enviarEmailNotificacao(dto.getIdFuncionario(), assunto, mensagem);
     }
 }
