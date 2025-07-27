@@ -22,6 +22,7 @@ import scb.microsservico.equipamentos.enums.BicicletaStatus;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaNotFoundException;
 import scb.microsservico.equipamentos.exception.Bicicleta.BicicletaOcupadaException;
+import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Tranca;
 import scb.microsservico.equipamentos.repository.BicicletaRepository;
@@ -273,21 +274,39 @@ class BicicletaServiceTest {
     }
 
     @Test
-    void integrarBicicletaNaRede_QuandoFalhaEnvioEmail_NaoLancaExcecao() {
+    void integrarBicicletaNaRede_QuandoFuncionarioNaoTemEmail_DeveLancarFuncionarioNotFoundException() {
         IntegrarBicicletaDTO integrarDTO = new IntegrarBicicletaDTO();
         integrarDTO.setIdBicicleta(1L);
         integrarDTO.setIdTranca(1L);
         integrarDTO.setIdFuncionario(1L);
 
         FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail("teste@email.com");
+        funcionarioEmailDTO.setEmail(null); // Email inexistente
 
         when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
         when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
         when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
-        doThrow(new RuntimeException("Falha no envio")).when(externoServiceClient).enviarEmail(any(EmailRequestDTO.class));
 
-        assertDoesNotThrow(() -> bicicletaService.integrarBicicletaNaRede(integrarDTO));
-        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
+        assertThrows(FuncionarioNotFoundException.class, () -> bicicletaService.integrarBicicletaNaRede(integrarDTO));
+    }
+
+    @Test
+    void retirarBicicletaDaRede_QuandoFuncionarioNaoTemEmail_DeveLancarFuncionarioNotFoundException() {
+        bicicleta.setStatus(BicicletaStatus.EM_USO);
+        tranca.setStatus(TrancaStatus.OCUPADA);
+        RetirarBicicletaDTO retirarDTO = new RetirarBicicletaDTO();
+        retirarDTO.setIdBicicleta(1L);
+        retirarDTO.setIdTranca(1L);
+        retirarDTO.setIdFuncionario(1L);
+        retirarDTO.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
+
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail(""); // Email vazio
+
+        when(bicicletaRepository.findById(1L)).thenReturn(Optional.of(bicicleta));
+        when(trancaRepository.findById(1L)).thenReturn(Optional.of(tranca));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
+
+        assertThrows(FuncionarioNotFoundException.class, () -> bicicletaService.retirarBicicletaDaRede(retirarDTO));
     }
 }

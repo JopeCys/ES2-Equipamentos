@@ -13,6 +13,7 @@ import scb.microsservico.equipamentos.dto.Client.FuncionarioEmailDTO;
 import scb.microsservico.equipamentos.dto.Tranca.*;
 import scb.microsservico.equipamentos.enums.AcaoRetirar;
 import scb.microsservico.equipamentos.enums.TrancaStatus;
+import scb.microsservico.equipamentos.exception.Client.FuncionarioNotFoundException;
 import scb.microsservico.equipamentos.exception.Tranca.*;
 import scb.microsservico.equipamentos.model.Bicicleta;
 import scb.microsservico.equipamentos.model.Totem;
@@ -191,7 +192,7 @@ class TrancaServiceTest {
     }
 
     @Test
-    void integrarNaRede_QuandoFalhaEnvioEmail_NaoLancaExcecao() {
+    void integrarNaRede_QuandoFuncionarioNaoTemEmail_DeveLancarFuncionarioNotFoundException() {
         tranca.setStatus(TrancaStatus.NOVA);
         IntegrarTrancaDTO request = new IntegrarTrancaDTO();
         request.setIdTranca(tranca.getId());
@@ -199,14 +200,31 @@ class TrancaServiceTest {
         request.setIdFuncionario(1L);
 
         FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
-        funcionarioEmailDTO.setEmail("reparador@email.com");
+        funcionarioEmailDTO.setEmail(null); // Email inexistente
 
         when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
         when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
         when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
-        doThrow(new RuntimeException("Falha no envio")).when(externoServiceClient).enviarEmail(any(EmailRequestDTO.class));
 
-        assertDoesNotThrow(() -> trancaService.integrarNaRede(request));
-        verify(externoServiceClient, times(1)).enviarEmail(any(EmailRequestDTO.class));
+        assertThrows(FuncionarioNotFoundException.class, () -> trancaService.integrarNaRede(request));
+    }
+
+    @Test
+    void retirarDaRede_QuandoFuncionarioNaoTemEmail_DeveLancarFuncionarioNotFoundException() {
+        totem.setTrancas(new java.util.ArrayList<>(java.util.List.of(tranca)));
+        RetirarTrancaDTO request = new RetirarTrancaDTO();
+        request.setIdTranca(tranca.getId());
+        request.setIdTotem(totem.getId());
+        request.setStatusAcaoReparador(AcaoRetirar.EM_REPARO);
+        request.setIdFuncionario(1L);
+
+        FuncionarioEmailDTO funcionarioEmailDTO = new FuncionarioEmailDTO();
+        funcionarioEmailDTO.setEmail(""); // Email vazio
+
+        when(trancaRepository.findById(tranca.getId())).thenReturn(Optional.of(tranca));
+        when(totemRepository.findById(totem.getId())).thenReturn(Optional.of(totem));
+        when(aluguelServiceClient.getEmailFuncionario(1L)).thenReturn(funcionarioEmailDTO);
+
+        assertThrows(FuncionarioNotFoundException.class, () -> trancaService.retirarDaRede(request));
     }
 }
