@@ -38,6 +38,7 @@ public class AdminService {
         Totem totem1 = new Totem();
         totem1.setId(1L);
         totem1.setLocalizacao("Rio de Janeiro");
+        totem1.setDescricao("Descrição");
         totemRepository.save(totem1);
 
         // 3. Criar Bicicletas
