@@ -120,7 +120,7 @@ public class TrancaService {
                 .orElseThrow(TrancaNotFoundException::new);
 
         if (TrancaStatus.OCUPADA.equals(tranca.getStatus())) {
-            throw new TrancaOcupadaException();
+            throw new TrancaOcupadaException("Não é possível trancar uma tranca já OCUPADA!");
         }
 
         // Para haver alteração, idBicicleta deve
