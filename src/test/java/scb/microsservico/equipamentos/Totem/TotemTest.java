@@ -40,7 +40,7 @@ class TotemTest {
         assertNull(totem.getId());
         assertNull(totem.getLocalizacao());
         assertNull(totem.getDescricao());
-        assertNull(totem.getTrancas());
+        assertTrue(totem.getTrancas().isEmpty());
     }
 
     @Test

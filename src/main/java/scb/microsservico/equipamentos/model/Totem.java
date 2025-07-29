@@ -23,5 +23,5 @@ public class Totem {
     // Relacionamento uma-para-muitos com a entidade Tranca
     // mappedBy indica que a relação é gerenciada pelo campo 'totem' na classe Tranca.
     @OneToMany(mappedBy = "totem")
-    private List<Tranca> trancas;
+    private List<Tranca> trancas = new java.util.ArrayList<>();
 }
